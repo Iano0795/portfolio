@@ -1,92 +1,109 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+const skillLayers = [
+  {
+    layer: 'Interface Layer',
+    path: '/ui',
+    accent: '#00ff88',
+    skills: ['React', 'Next.js', 'TypeScript', 'Tailwind'],
+  },
+  {
+    layer: 'Service Layer',
+    path: '/services',
+    accent: '#00d9ff',
+    skills: ['Node.js', 'Express', 'GraphQL', 'REST'],
+  },
+  {
+    layer: 'Data Layer',
+    path: '/data',
+    accent: '#9af7c7',
+    skills: ['PostgreSQL', 'Prisma', 'Supabase'],
+  },
+  {
+    layer: 'Platform Layer',
+    path: '/platform',
+    accent: '#ffbd2e',
+    skills: ['Vercel', 'Docker', 'Git'],
+  },
+  {
+    layer: 'Security Layer',
+    path: '/security',
+    accent: '#ff5f56',
+    skills: ['Nmap', 'Wireshark', 'Burp Suite', 'SIEM basics'],
+  },
+  {
+    layer: 'Design/AI Layer',
+    path: '/design-ai',
+    accent: '#b7f7ff',
+    skills: ['Figma', 'Magic Patterns', 'Codex'],
+  },
+];
 
 export function SkillsSection() {
   const [showCards, setShowCards] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 200);
+    const timer = setTimeout(() => setShowCards(true), 160);
     return () => clearTimeout(timer);
   }, []);
 
-  const skillGroups = [
-    {
-      category: 'Frontend',
-      color: '#00ff88',
-      skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Vite', 'Responsive Design'],
-    },
-    {
-      category: 'Backend',
-      color: '#00d9ff',
-      skills: ['Node.js', 'Express', 'GraphQL', 'Prisma', 'PostgreSQL', 'REST APIs'],
-    },
-    {
-      category: 'Architecture',
-      color: '#ff00ff',
-      skills: ['DXP', 'DWS', 'API-first systems', 'Workflow platforms', 'Microservices', 'System Design'],
-    },
-    {
-      category: 'Cybersecurity',
-      color: '#ff5f56',
-      skills: ['Nmap', 'Wireshark', 'Burp Suite', 'SIEM basics', 'CTFs', 'Network Analysis'],
-    },
-    {
-      category: 'Tools & Platforms',
-      color: '#ffbd2e',
-      skills: ['Git', 'Vercel', 'Supabase', 'Figma', 'Codex', 'Docker'],
-    },
-  ];
-
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6 font-mono text-sm text-gray-500">
-        <span className="text-[#00ff88]">guest@ian-os</span>:<span className="text-cyan-400">~</span>$ ls -la /skills
+    <section className="w-full max-w-7xl mx-auto">
+      <div className="mb-5 font-mono text-sm text-gray-500">
+        <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ scan /bin/toolchain.bin
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-3">Technical Skills</h2>
-        <p className="text-gray-400">
-          A comprehensive toolkit for building modern, secure, and scalable solutions.
+      <div className="mb-7 grid lg:grid-cols-[0.8fr_1.2fr] gap-6 items-end">
+        <div>
+          <div className="font-mono text-xs text-[#00ff88] mb-3">toolchain.bin / layered stack</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">Skills organized by system layer.</h2>
+        </div>
+        <p className="text-gray-400 leading-relaxed">
+          The toolchain spans interface engineering, backend services, data modeling, deployment, security analysis,
+          design translation, and AI-assisted development workflows.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {skillGroups.map((group, index) => (
-          <div
-            key={group.category}
-            className={`bg-[#0d1117] border border-gray-600 hover:border-[#00ff88]/40 hover:-translate-y-0.5 p-6 transition-all duration-500 hover:shadow-[0_0_20px_rgba(0,255,136,0.1)] ${
-              showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {skillLayers.map((group, index) => (
+          <article
+            key={group.layer}
+            className={`border border-gray-700 bg-[#090d16]/80 p-5 hover:border-[#00ff88]/35 hover:-translate-y-0.5 transition-all duration-500 ${
+              showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
             }`}
-            style={{ transitionDelay: `${index * 100}ms` }}
+            style={{ transitionDelay: `${index * 85}ms` }}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">{group.category}</h3>
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <div className="font-mono text-xs text-gray-600 mb-2">{group.path}</div>
+                <h3 className="text-xl font-bold text-white">{group.layer}</h3>
+              </div>
               <div
                 className="font-mono text-xs px-2 py-1 border"
                 style={{
-                  borderColor: `${group.color}40`,
-                  color: group.color,
-                  backgroundColor: `${group.color}10`,
+                  borderColor: `${group.accent}66`,
+                  color: group.accent,
+                  backgroundColor: `${group.accent}12`,
                 }}
               >
-                [{String(index + 1).padStart(2, '0')}]
+                L{String(index + 1).padStart(2, '0')}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {group.skills.map((skill, skillIndex) => (
-                <span
+
+            <div className="grid gap-2">
+              {group.skills.map((skill) => (
+                <div
                   key={skill}
-                  className={`font-mono text-xs px-2 py-1 bg-gray-800/50 border border-gray-700 text-gray-300 transition-all duration-300 ${
-                    showCards ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
-                  }`}
-                  style={{ transitionDelay: `${(index * 100) + (skillIndex * 50) + 200}ms` }}
+                  className="font-mono text-sm flex items-center justify-between gap-3 bg-black/20 border border-gray-800 px-3 py-2"
                 >
-                  {skill}
-                </span>
+                  <span className="text-gray-300">{skill}</span>
+                  <span className="text-gray-700">loaded</span>
+                </div>
               ))}
             </div>
-          </div>
+          </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

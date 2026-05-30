@@ -1,148 +1,151 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export function ProfileSection() {
-  const [showInit, setShowInit] = useState(false);
-  const [showHeadline, setShowHeadline] = useState(false);
-  const [showText, setShowText] = useState(false);
-  const [showButtons, setShowButtons] = useState(false);
-  const [showTerminal, setShowTerminal] = useState(false);
-  const [terminalLines, setTerminalLines] = useState(0);
+type ProfileSectionProps = {
+  onNavigate: (section: 'projects' | 'contact' | 'skills') => void;
+  onDownloadCv: () => void;
+};
+
+const identityRows = [
+  ['NAME', 'Ian Kipkorir'],
+  ['ROLE', 'Full-Stack Engineer'],
+  ['MODE', 'Solutions Architect'],
+  ['FOCUS', 'Enterprise Platforms'],
+  ['SIGNAL', 'Security-aware builder'],
+  ['STACK', 'React / Next.js / Node.js / TypeScript'],
+];
+
+const nowBuilding = [
+  'Enterprise digital platforms',
+  'DXP / DWS prototypes',
+  'Security-aware full-stack systems',
+  'AI-assisted engineering workflows',
+];
+
+const commands = ['help', 'whoami', 'open builds', 'open toolchain', 'open career', 'download cv', 'contact'];
+
+export function ProfileSection({ onNavigate, onDownloadCv }: ProfileSectionProps) {
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setShowInit(true), 100),
-      setTimeout(() => setShowHeadline(true), 800),
-      setTimeout(() => setShowText(true), 1200),
-      setTimeout(() => setShowButtons(true), 1600),
-      setTimeout(() => setShowTerminal(true), 2000),
-      setTimeout(() => setTerminalLines(1), 2400),
-      setTimeout(() => setTerminalLines(2), 2600),
-      setTimeout(() => setTerminalLines(3), 2800),
-    ];
-
-    return () => timers.forEach(clearTimeout);
+    const timer = setTimeout(() => setMounted(true), 120);
+    return () => clearTimeout(timer);
   }, []);
 
+  const runProfileCommand = (command: string) => {
+    if (command === 'open builds') {
+      onNavigate('projects');
+    }
+
+    if (command === 'open toolchain') {
+      onNavigate('skills');
+    }
+
+    if (command === 'download cv') {
+      onDownloadCv();
+    }
+
+    if (command === 'contact') {
+      onNavigate('contact');
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6 font-mono text-sm text-gray-500">
-        <span className="text-[#00ff88]">guest@ian-os</span>:<span className="text-cyan-400">~</span>$ cat profile.txt
+    <section className="w-full max-w-7xl mx-auto min-w-0">
+      <div className="mb-5 font-mono text-sm text-gray-500">
+        <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ boot identity.sys
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div
-              className={`font-mono text-sm text-[#00ff88] mb-4 transition-all duration-500 ${
-                showInit ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-              }`}
-            >
-              <span className="text-gray-500">&gt;</span> Initializing Ian Kipkorir... <span className="text-[#27c93f]">[OK]</span>
-            </div>
+      <div className="grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-6">
+        <div
+          className={`border border-[#00ff88]/25 bg-[#090d16]/80 p-6 md:p-8 shadow-[0_0_30px_rgba(0,255,136,0.07)] transition-all duration-500 ${
+            mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+          }`}
+        >
+          <div className="font-mono text-xs text-cyan-400 mb-5">module.identity / professional kernel</div>
+          <h1 className="text-4xl md:text-6xl font-bold text-white leading-[1.04] mb-5 tracking-normal">
+            Full-Stack Engineer &amp; Solutions Architect
+          </h1>
+          <p className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-3xl">
+            I turn complex business requirements into secure, scalable digital platforms &mdash; from prototype and
+            architecture to production-ready systems.
+          </p>
 
-            <h1
-              className={`text-4xl font-bold text-white mb-3 transition-all duration-500 ${
-                showHeadline ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
+          <div className="mt-7 grid sm:grid-cols-3 gap-3">
+            <button
+              onClick={() => onNavigate('projects')}
+              className="font-mono text-sm px-4 py-3 bg-[#00ff88]/10 border border-[#00ff88]/40 text-[#00ff88] hover:bg-[#00ff88]/18 transition-all shadow-[0_0_16px_rgba(0,255,136,0.12)]"
             >
-              Full-Stack Engineer &<br />Solutions Architect
-            </h1>
-
-            <p
-              className={`text-lg text-gray-400 leading-relaxed transition-all duration-500 ${
-                showText ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-              }`}
-            >
-              I design and build enterprise-grade digital platforms, modern web applications,
-              and security-aware systems.
-            </p>
-          </div>
-
-          <div
-            className={`flex flex-wrap gap-3 transition-all duration-500 ${
-              showButtons ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-            }`}
-          >
-            <button className="px-6 py-3 bg-[#00ff88]/10 border border-[#00ff88]/40 text-[#00ff88] hover:bg-[#00ff88]/20 transition-all font-mono text-sm shadow-[0_0_15px_rgba(0,255,136,0.2)]">
-              View Projects
+              open builds
             </button>
-            <button className="px-6 py-3 bg-cyan-500/10 border border-cyan-400/40 text-cyan-400 hover:bg-cyan-500/20 transition-all font-mono text-sm">
-              Download CV
+            <button
+              onClick={() => onNavigate('skills')}
+              className="font-mono text-sm px-4 py-3 bg-cyan-400/10 border border-cyan-400/35 text-cyan-300 hover:bg-cyan-400/15 transition-all"
+            >
+              open toolchain
             </button>
-            <button className="px-6 py-3 border border-gray-600 text-gray-300 hover:border-[#00ff88]/40 hover:text-[#00ff88] transition-all font-mono text-sm">
-              Contact Me
+            <button
+              onClick={() => onNavigate('contact')}
+              className="font-mono text-sm px-4 py-3 border border-gray-600 text-gray-300 hover:border-[#00ff88]/35 hover:text-[#00ff88] transition-all"
+            >
+              connect.sh
             </button>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-4">
-          {/* Terminal Identity Card */}
+        <div className="grid gap-4 min-w-0">
           <div
-            className={`bg-[#0d1117] border border-[#00ff88]/30 p-5 shadow-[0_0_20px_rgba(0,255,136,0.1)] transition-all duration-500 ${
-              showTerminal ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            className={`border border-cyan-400/25 bg-[#090d16]/85 p-5 transition-all duration-500 delay-100 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
             }`}
           >
-            <div className="font-mono text-sm mb-4 text-gray-500">
-              <span className="text-[#00ff88]">guest@ian-os</span>:<span className="text-cyan-400">~</span>$ whoami
+            <div className="flex items-center justify-between mb-4 font-mono text-xs">
+              <span className="text-cyan-400">identity.block</span>
+              <span className="text-gray-600">verified</span>
             </div>
-            <div className="space-y-2 font-mono text-sm">
-              <div
-                className={`text-gray-400 transition-all duration-300 ${
-                  terminalLines >= 1 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-                }`}
-              >
-                <span className="text-[#00ff88]">&gt;</span> full-stack engineer
-              </div>
-              <div
-                className={`text-gray-400 transition-all duration-300 ${
-                  terminalLines >= 2 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-                }`}
-              >
-                <span className="text-[#00ff88]">&gt;</span> solutions architect
-              </div>
-              <div
-                className={`text-gray-400 transition-all duration-300 ${
-                  terminalLines >= 3 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
-                }`}
-              >
-                <span className="text-[#00ff88]">&gt;</span> cybersecurity-focused builder
-              </div>
+            <div className="space-y-3 font-mono text-sm">
+              {identityRows.map(([label, value]) => (
+                <div key={label} className="grid grid-cols-[86px_minmax(0,1fr)] gap-3 border-b border-gray-800/80 pb-2 last:border-0 last:pb-0">
+                  <span className="text-gray-500">{label}:</span>
+                  <span className={`${label === 'NAME' ? 'text-white' : 'text-gray-300'} min-w-0 break-words`}>{value}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Info Widgets */}
-          <div className="grid grid-cols-1 gap-3">
-            <div
-              className={`bg-[#0d1117] border border-cyan-400/30 p-4 transition-all duration-500 delay-100 ${
-                showTerminal ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-              }`}
-            >
-              <div className="font-mono text-xs text-gray-500 mb-2">CURRENT FOCUS</div>
-              <div className="text-cyan-400">Digital platforms</div>
+          <div
+            className={`grid md:grid-cols-2 gap-4 transition-all duration-500 delay-200 ${
+              mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
+            }`}
+          >
+            <div className="border border-[#00ff88]/20 bg-[#090d16]/75 p-5">
+              <div className="font-mono text-xs text-[#00ff88] mb-4">now_building.queue</div>
+              <div className="space-y-3">
+                {nowBuilding.map((item) => (
+                  <div key={item} className="flex gap-3 text-sm text-gray-300">
+                    <span className="font-mono text-[#00ff88] mt-0.5">&gt;</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div
-              className={`bg-[#0d1117] border border-[#00ff88]/30 p-4 transition-all duration-500 delay-200 ${
-                showTerminal ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-              }`}
-            >
-              <div className="font-mono text-xs text-gray-500 mb-2">CORE STACK</div>
-              <div className="text-[#00ff88] text-sm">React, Next.js, Node.js, TypeScript</div>
-            </div>
-
-            <div
-              className={`bg-[#0d1117] border border-gray-600 p-4 transition-all duration-500 delay-300 ${
-                showTerminal ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-              }`}
-            >
-              <div className="font-mono text-xs text-gray-500 mb-2">AVAILABILITY</div>
-              <div className="text-gray-300">Open to selected opportunities</div>
+            <div className="border border-gray-700 bg-black/25 p-5">
+              <div className="font-mono text-xs text-gray-500 mb-4">mini_build_console</div>
+              <div className="space-y-1">
+                {commands.map((command) => (
+                  <button
+                    key={command}
+                    onClick={() => runProfileCommand(command)}
+                    className="block w-full text-left font-mono text-xs text-gray-400 hover:text-cyan-300 px-2 py-1.5 hover:bg-cyan-400/5 border border-transparent hover:border-cyan-400/15 transition-all"
+                  >
+                    <span className="text-cyan-500">$</span> {command}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

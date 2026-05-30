@@ -1,99 +1,72 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+const storyPoints = [
+  {
+    label: 'business.input',
+    title: 'Reads the requirement behind the ticket',
+    body: 'Ian maps business journeys, stakeholder constraints, and operational risk before choosing a technical path.',
+  },
+  {
+    label: 'architecture.bridge',
+    title: 'Connects product, UX, services, and delivery',
+    body: 'He thinks across the interface, backend systems, APIs, workflow states, access models, and implementation tradeoffs.',
+  },
+  {
+    label: 'security.baseline',
+    title: 'Builds with a security-aware mindset',
+    body: 'Security is treated as part of the system shape: validation, permissions, data exposure, logs, and operational behavior.',
+  },
+];
 
 export function AboutSection() {
   const [showCards, setShowCards] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowCards(true), 200);
+    const timer = setTimeout(() => setShowCards(true), 160);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6 font-mono text-sm text-gray-500">
-        <span className="text-[#00ff88]">guest@ian-os</span>:<span className="text-cyan-400">~</span>$ cat about.txt
+    <section className="w-full max-w-7xl mx-auto">
+      <div className="mb-5 font-mono text-sm text-gray-500">
+        <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ tail /logs/origin.log
       </div>
 
-      <div className="mb-10">
-        <h2 className="text-3xl font-bold text-white mb-4">About Me</h2>
-        <p className="text-lg text-gray-400 leading-relaxed max-w-3xl">
-          I'm a full-stack engineer passionate about building scalable digital experiences that solve real problems.
-          With expertise spanning modern web technologies, enterprise architecture, and cybersecurity, I bring a
-          holistic approach to software development. I thrive on designing systems that are not just functional,
-          but secure, maintainable, and built to last.
-        </p>
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Platform Engineering */}
-        <div
-          className={`bg-[#0d1117] border border-[#00ff88]/30 p-6 shadow-[0_0_20px_rgba(0,255,136,0.05)] hover:shadow-[0_0_25px_rgba(0,255,136,0.15)] transition-all duration-500 ${
-            showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          <div
-            className={`font-mono text-xs text-[#00ff88] mb-3 transition-all duration-300 delay-100 ${
-              showCards ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            [01]
-          </div>
-          <h3 className="text-xl font-bold text-white mb-3">Platform Engineering</h3>
-          <p className="text-gray-400 leading-relaxed">
-            Building enterprise-grade digital experience platforms (DXP) and digital workspace solutions (DWS)
-            that power complex business workflows and serve thousands of users.
+      <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
+        <div className="border border-[#00ff88]/25 bg-[#090d16]/80 p-6 md:p-7">
+          <div className="font-mono text-xs text-[#00ff88] mb-4">origin.log / system narrative</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-5">From requirement to working platform.</h2>
+          <p className="text-gray-300 leading-relaxed mb-5">
+            Ian Kipkorir is a full-stack engineer and solutions architect focused on enterprise-grade digital
+            platforms. His work sits where business requirements, user journeys, platform architecture, backend
+            systems, and secure implementation need to line up.
           </p>
-          <div className="mt-4 font-mono text-xs text-cyan-400">
-            &gt; React &bull; Next.js &bull; Node.js &bull; TypeScript
-          </div>
+          <p className="text-gray-400 leading-relaxed">
+            The strongest pattern in his work is translation: turning static specifications and complex stakeholder
+            needs into usable product experiences, technical blueprints, APIs, workflows, and production-ready
+            implementation paths.
+          </p>
         </div>
 
-        {/* Solution Architecture */}
-        <div
-          className={`bg-[#0d1117] border border-cyan-400/30 p-6 shadow-[0_0_20px_rgba(0,255,255,0.05)] hover:shadow-[0_0_25px_rgba(0,255,255,0.15)] transition-all duration-500 delay-150 ${
-            showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          <div
-            className={`font-mono text-xs text-cyan-400 mb-3 transition-all duration-300 delay-250 ${
-              showCards ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            [02]
-          </div>
-          <h3 className="text-xl font-bold text-white mb-3">Solution Architecture</h3>
-          <p className="text-gray-400 leading-relaxed">
-            Designing API-first systems, microservices architectures, and workflow platforms that scale.
-            I focus on creating modular, maintainable systems with clear separation of concerns.
-          </p>
-          <div className="mt-4 font-mono text-xs text-cyan-400">
-            &gt; API Design &bull; GraphQL &bull; Microservices &bull; Scalability
-          </div>
-        </div>
-
-        {/* Cybersecurity Mindset */}
-        <div
-          className={`bg-[#0d1117] border border-gray-600 p-6 hover:border-[#00ff88]/30 hover:shadow-[0_0_20px_rgba(0,255,136,0.1)] transition-all duration-500 delay-300 ${
-            showCards ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        >
-          <div
-            className={`font-mono text-xs text-gray-500 mb-3 transition-all duration-300 delay-400 ${
-              showCards ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            [03]
-          </div>
-          <h3 className="text-xl font-bold text-white mb-3">Cybersecurity Mindset</h3>
-          <p className="text-gray-400 leading-relaxed">
-            Security is never an afterthought. From network analysis to penetration testing, I bring
-            a security-first approach to every system I build, ensuring robust protection at every layer.
-          </p>
-          <div className="mt-4 font-mono text-xs text-gray-400">
-            &gt; Nmap &bull; Wireshark &bull; Burp Suite &bull; CTFs
-          </div>
+        <div className="grid gap-4">
+          {storyPoints.map((point, index) => (
+            <div
+              key={point.label}
+              className={`border border-gray-700 bg-[#090d16]/75 p-5 hover:border-cyan-400/30 transition-all duration-500 ${
+                showCards ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-5'
+              }`}
+              style={{ transitionDelay: `${index * 110}ms` }}
+            >
+              <div className="flex items-center justify-between mb-3 font-mono text-xs">
+                <span className={index === 0 ? 'text-[#00ff88]' : 'text-cyan-400'}>{point.label}</span>
+                <span className="text-gray-600">0{index + 1}</span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">{point.title}</h3>
+              <p className="text-gray-400 leading-relaxed">{point.body}</p>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

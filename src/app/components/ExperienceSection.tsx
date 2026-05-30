@@ -1,126 +1,95 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+const stages = [
+  {
+    stage: 'Stage 01',
+    title: 'Full-Stack Execution',
+    period: 'foundation',
+    summary: 'Built modern interfaces, service endpoints, integrations, and production features across the stack.',
+    evidence: ['React and Next.js interfaces', 'Node.js service work', 'API integration and delivery discipline'],
+  },
+  {
+    stage: 'Stage 02',
+    title: 'Platform Thinking',
+    period: 'enterprise systems',
+    summary: 'Moved from feature delivery into workflow platforms, DXP/DWS concepts, data surfaces, and system-wide product behavior.',
+    evidence: ['Enterprise journey mapping', 'Workspace platform modules', 'Cross-system workflow awareness'],
+  },
+  {
+    stage: 'Stage 03',
+    title: 'Solution Leadership',
+    period: 'architecture track',
+    summary: 'Translated stakeholder requirements into architecture, prototype direction, implementation plans, and handoff-ready specs.',
+    evidence: ['Architecture blueprints', 'Prototype-to-build alignment', 'Technical communication across roles'],
+  },
+  {
+    stage: 'Stage 04',
+    title: 'Security-Aware Engineering',
+    period: 'active focus',
+    summary: 'Strengthened delivery with cybersecurity practice across access, validation, data exposure, testing, and operations.',
+    evidence: ['Nmap, Wireshark, Burp Suite', 'CTF and lab practice', 'Security thinking inside product delivery'],
+  },
+];
 
 export function ExperienceSection() {
   const [showEntries, setShowEntries] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowEntries(true), 200);
+    const timer = setTimeout(() => setShowEntries(true), 160);
     return () => clearTimeout(timer);
   }, []);
 
-  const experiences = [
-    {
-      timestamp: '2023 - Present',
-      company: 'DQ Digital Platform',
-      role: 'Lead Full-Stack Engineer',
-      description: 'Leading development of enterprise digital workspace platform. Architecting scalable solutions for workflow automation, document management, and team collaboration serving 500+ users.',
-      achievements: [
-        'Designed and implemented microservices architecture',
-        'Reduced system latency by 40% through optimization',
-        'Led team of 4 engineers in agile environment',
-      ],
-    },
-    {
-      timestamp: '2022 - 2023',
-      company: 'QNB Digital Banking',
-      role: 'Full-Stack Developer',
-      description: 'Built secure digital banking platform features with focus on customer experience and transaction security. Worked with React, Node.js, and GraphQL to deliver scalable solutions.',
-      achievements: [
-        'Developed secure transaction processing module',
-        'Implemented real-time notification system',
-        'Improved frontend performance by 35%',
-      ],
-    },
-    {
-      timestamp: '2021 - 2022',
-      company: 'Khalifa Fund',
-      role: 'Solutions Architect',
-      description: 'Designed enterprise journey platform for funding applications. Created workflow orchestration system handling complex multi-step processes with approval chains.',
-      achievements: [
-        'Architected end-to-end application journey system',
-        'Integrated with multiple third-party APIs',
-        'Reduced application processing time by 50%',
-      ],
-    },
-    {
-      timestamp: '2020 - 2021',
-      company: 'Microsoft Integration Project',
-      role: 'Integration Engineer',
-      description: 'Developed real-time chat integration connecting Microsoft Omnichannel with enterprise platforms. Built WebSocket-based communication layer and REST API interfaces.',
-      achievements: [
-        'Built real-time bidirectional messaging system',
-        'Implemented message queue for reliability',
-        'Achieved 99.9% uptime in production',
-      ],
-    },
-  ];
-
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6 font-mono text-sm text-gray-500">
-        <span className="text-[#00ff88]">guest@ian-os</span>:<span className="text-cyan-400">~</span>$ tail -f /var/log/experience.log
+    <section className="w-full max-w-7xl mx-auto">
+      <div className="mb-5 font-mono text-sm text-gray-500">
+        <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ tail -f /logs/career.log
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-white mb-3">Experience</h2>
-        <p className="text-gray-400">
-          Professional journey building enterprise platforms and secure systems.
+      <div className="mb-7 grid lg:grid-cols-[0.85fr_1.15fr] gap-6 items-end">
+        <div>
+          <div className="font-mono text-xs text-cyan-400 mb-3">career.log / growth stages</div>
+          <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">Career progression as capability growth.</h2>
+        </div>
+        <p className="text-gray-400 leading-relaxed">
+          The timeline is framed less as a list of jobs and more as a progression: execution, platform thinking,
+          solution leadership, and security-aware engineering.
         </p>
       </div>
 
-      <div className="space-y-6">
-        {experiences.map((exp, index) => (
-          <div
-            key={exp.company}
-            className={`bg-[#0d1117] border border-gray-600 hover:border-[#00ff88]/30 p-6 transition-all duration-500 hover:shadow-[0_0_20px_rgba(0,255,136,0.1)] relative ${
-              showEntries ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
+      <div className="relative space-y-4">
+        <div className="absolute left-5 top-4 bottom-4 w-px bg-gradient-to-b from-[#00ff88]/60 via-cyan-400/30 to-transparent hidden md:block" />
+
+        {stages.map((item, index) => (
+          <article
+            key={item.title}
+            className={`relative md:ml-12 border border-gray-700 bg-[#090d16]/80 p-5 md:p-6 hover:border-[#00ff88]/35 transition-all duration-500 ${
+              showEntries ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-5'
             }`}
-            style={{ transitionDelay: `${index * 150}ms` }}
+            style={{ transitionDelay: `${index * 120}ms` }}
           >
-            {/* Timeline Indicator */}
-            <div
-              className={`absolute -left-[1px] top-0 bottom-0 w-1 bg-gradient-to-b from-[#00ff88]/50 to-transparent transition-all duration-700 ${
-                showEntries ? 'scale-y-100' : 'scale-y-0'
-              }`}
-              style={{ transitionDelay: `${index * 150}ms`, transformOrigin: 'top' }}
-            />
-
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+            <div className="hidden md:block absolute -left-[43px] top-6 w-3 h-3 bg-[#00ff88] shadow-[0_0_12px_rgba(0,255,136,0.8)]" />
+            <div className="grid lg:grid-cols-[0.45fr_1fr] gap-5">
               <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-xl font-bold text-white">{exp.role}</h3>
-                  <span className="font-mono text-xs px-2 py-1 bg-[#00ff88]/10 border border-[#00ff88]/30 text-[#00ff88]">
-                    [{String(index + 1).padStart(2, '0')}]
-                  </span>
-                </div>
-                <div className="text-cyan-400 mb-2">{exp.company}</div>
+                <div className="font-mono text-xs text-[#00ff88] mb-2">{item.stage}</div>
+                <h3 className="text-2xl font-bold text-white leading-tight mb-2">{item.title}</h3>
+                <div className="font-mono text-xs text-cyan-300">{item.period}</div>
               </div>
-              <div className="font-mono text-sm text-gray-500 md:text-right">
-                {exp.timestamp}
+              <div>
+                <p className="text-gray-400 leading-relaxed mb-4">{item.summary}</p>
+                <div className="grid sm:grid-cols-3 gap-2">
+                  {item.evidence.map((evidence) => (
+                    <div key={evidence} className="border border-gray-800 bg-black/20 p-3 text-sm text-gray-300">
+                      {evidence}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-
-            <p className="text-gray-400 mb-4 leading-relaxed">
-              {exp.description}
-            </p>
-
-            <div className="space-y-2">
-              <div className="font-mono text-xs text-gray-500 mb-2">KEY ACHIEVEMENTS:</div>
-              {exp.achievements.map((achievement, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="text-[#00ff88] font-mono text-sm mt-0.5">&gt;</span>
-                  <span className="text-gray-400 text-sm">{achievement}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          </article>
         ))}
       </div>
 
-      {/* End of log indicator */}
-      <div className="mt-6 font-mono text-sm text-gray-600 text-center">
-        [END OF LOG] - Total entries: {experiences.length}
-      </div>
-    </div>
+      <div className="mt-6 font-mono text-sm text-gray-600 text-center">[END OF CAREER.LOG] - stages indexed: {stages.length}</div>
+    </section>
   );
 }
