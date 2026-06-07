@@ -27,6 +27,11 @@ export type QuickCommand = {
   target?: SectionId;
 };
 
+export type NavigationData = {
+  items: NavigationItem[];
+  quickCommands: QuickCommand[];
+};
+
 export type SiteConfig = {
   brandName: string;
   appTitle: string;
@@ -243,4 +248,24 @@ export type ContactData = {
     sendingButton: string;
   };
   links: ContactLink[];
+};
+
+export type ResumeData = {
+  fileName: string;
+  fileUrl: string;
+  versionLabel: string;
+} | null;
+
+export type PortfolioData = {
+  site: SiteConfig;
+  navigation: NavigationData;
+  profile: ProfileData;
+  about: AboutData;
+  projects: ProjectsData;
+  skills: SkillsData;
+  experience: ExperienceData;
+  capabilities: CapabilitiesData;
+  process: ProcessData;
+  contact: ContactData;
+  resume: ResumeData;
 };
