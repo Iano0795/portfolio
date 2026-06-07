@@ -7,7 +7,7 @@ export const projectsData: ProjectsData = {
   filters: ['All', 'Enterprise Platforms', 'DXP/DWS', 'Integrations', 'Security'],
   featuredBuild: {
     label: 'Featured Build',
-    title: 'DQ Digital Workspace Platform',
+    title: 'Digital Workspace Platform',
     badge: 'case_study.preview',
     fields: [
       {
@@ -38,7 +38,7 @@ export const projectsData: ProjectsData = {
   caseStudyPreviewMeta: 'available in project walkthrough',
   projects: [
     {
-      title: 'DQ Digital Workspace Platform',
+      title: 'Digital Workspace Platform',
       slug: 'dq-digital-workspace-platform',
       role: 'Featured Build',
       description: 'Enterprise digital workspace platform for workflows, documents, teams, and operational tooling.',
@@ -51,7 +51,7 @@ export const projectsData: ProjectsData = {
       visibility: 'public',
     },
     {
-      title: 'QNB Digital Banking DXP',
+      title: 'Digital Banking DXP',
       slug: 'qnb-digital-banking-dxp',
       role: 'Digital Experience Platform',
       description: 'Banking DXP work focused on secure customer journeys, service surfaces, and scalable platform behavior.',

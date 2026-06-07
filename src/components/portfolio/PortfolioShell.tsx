@@ -1,16 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { capabilitiesData } from '@/data/capabilities';
-import { contactData } from '@/data/contact';
-import { experienceData } from '@/data/experience';
-import { navigationItems, quickCommands } from '@/data/navigation';
-import { processData } from '@/data/process';
-import { aboutData, profileData } from '@/data/profile';
-import { projectsData } from '@/data/projects';
-import { siteConfig } from '@/data/site';
-import { skillsData } from '@/data/skills';
-import type { QuickCommand, SectionId } from '@/types/portfolio';
+import type { PortfolioData, QuickCommand, SectionId } from '@/types/portfolio';
 import { AboutSection } from '@/components/sections/AboutSection';
 import { CapabilitiesSection } from '@/components/sections/CapabilitiesSection';
 import { ContactSection } from '@/components/sections/ContactSection';
@@ -25,15 +16,19 @@ import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 
-const sections = navigationItems;
+type PortfolioShellProps = {
+  data: PortfolioData;
+};
 
-export function PortfolioShell() {
-  const [activeSection, setActiveSection] = useState<SectionId>(siteConfig.defaultActiveSection);
+export function PortfolioShell({ data }: PortfolioShellProps) {
+  const sections = data.navigation.items;
+  const site = data.site;
+  const [activeSection, setActiveSection] = useState<SectionId>(site.defaultActiveSection);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [booted, setBooted] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [loadingModule, setLoadingModule] = useState(false);
-  const [consoleOutput, setConsoleOutput] = useState(siteConfig.initialConsoleOutput);
+  const [consoleOutput, setConsoleOutput] = useState(site.initialConsoleOutput);
 
   const activeConfig = sections.find((section) => section.id === activeSection) ?? sections[0];
 
@@ -54,7 +49,7 @@ export function PortfolioShell() {
     const nextModule = sections.find((item) => item.id === section)?.module ?? section;
     setTransitioning(true);
     setLoadingModule(true);
-    setConsoleOutput(output ?? `${siteConfig.loadingPrefix} ${nextModule}...`);
+    setConsoleOutput(output ?? `${site.loadingPrefix} ${nextModule}...`);
 
     setTimeout(() => {
       setActiveSection(section);
@@ -63,7 +58,7 @@ export function PortfolioShell() {
 
     setTimeout(() => {
       setTransitioning(false);
-      setConsoleOutput(`${siteConfig.mountedConsolePrefix} ${nextModule}.`);
+      setConsoleOutput(`${site.mountedConsolePrefix} ${nextModule}.`);
     }, 420);
   };
 
@@ -87,27 +82,27 @@ export function PortfolioShell() {
       case 'profile':
         return (
           <ProfileSection
-            data={profileData}
+            data={data.profile}
             onNavigate={handleSectionChange}
-            onDownloadCv={() => setConsoleOutput(siteConfig.messages.cvUnavailable)}
+            onDownloadCv={() => setConsoleOutput(site.messages.cvUnavailable)}
           />
         );
       case 'about':
-        return <AboutSection data={aboutData} />;
+        return <AboutSection data={data.about} />;
       case 'capabilities':
-        return <CapabilitiesSection data={capabilitiesData} />;
+        return <CapabilitiesSection data={data.capabilities} />;
       case 'skills':
-        return <SkillsSection data={skillsData} />;
+        return <SkillsSection data={data.skills} />;
       case 'projects':
-        return <ProjectsSection data={projectsData} />;
+        return <ProjectsSection data={data.projects} />;
       case 'process':
-        return <ProcessSection data={processData} />;
+        return <ProcessSection data={data.process} />;
       case 'experience':
-        return <ExperienceSection data={experienceData} />;
+        return <ExperienceSection data={data.experience} />;
       case 'contact':
-        return <ContactSection data={contactData} />;
+        return <ContactSection data={data.contact} />;
       default:
-        return <ProfileSection data={profileData} onNavigate={handleSectionChange} onDownloadCv={() => undefined} />;
+        return <ProfileSection data={data.profile} onNavigate={handleSectionChange} onDownloadCv={() => undefined} />;
     }
   };
 
@@ -130,7 +125,7 @@ export function PortfolioShell() {
         activeModule={activeConfig.module}
         booted={booted}
         mobileMenuOpen={mobileMenuOpen}
-        site={siteConfig}
+        site={site}
         onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
 
@@ -138,9 +133,9 @@ export function PortfolioShell() {
         <Sidebar
           activeSection={activeSection}
           booted={booted}
-          quickCommands={quickCommands}
+          quickCommands={data.navigation.quickCommands}
           sections={sections}
-          site={siteConfig}
+          site={site}
           onQuickCommand={runQuickCommand}
           onSectionChange={handleSectionChange}
         />
@@ -148,7 +143,7 @@ export function PortfolioShell() {
         {mobileMenuOpen && (
           <MobileNavigation
             activeSection={activeSection}
-            quickCommands={quickCommands}
+            quickCommands={data.navigation.quickCommands}
             sections={sections}
             onQuickCommand={runQuickCommand}
             onSectionChange={handleMobileSectionChange}
@@ -159,14 +154,14 @@ export function PortfolioShell() {
           activeConfig={activeConfig}
           booted={booted}
           loadingModule={loadingModule}
-          site={siteConfig}
+          site={site}
           transitioning={transitioning}
         >
           {renderSection()}
         </MainPanel>
       </div>
 
-      <StatusBar booted={booted} consoleOutput={consoleOutput} site={siteConfig} />
+      <StatusBar booted={booted} consoleOutput={consoleOutput} site={site} />
     </div>
   );
 }
