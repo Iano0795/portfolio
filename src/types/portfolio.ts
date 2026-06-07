@@ -10,12 +10,24 @@ export type SectionId =
 
 export type Section = SectionId;
 
+export type NavigationIconName =
+  | 'user'
+  | 'file-text'
+  | 'network'
+  | 'cpu'
+  | 'folder-git'
+  | 'git-branch'
+  | 'briefcase'
+  | 'send';
+
 export type NavigationItem = {
   id: SectionId;
   label: string;
   module: string;
   command: string;
+  icon: NavigationIconName;
   order: number;
+  visible: boolean;
   visibility: 'public';
 };
 
@@ -25,6 +37,13 @@ export type QuickCommand = {
   command: string;
   output: string;
   target?: SectionId;
+};
+
+export type ConsoleCommand = {
+  command: string;
+  target?: SectionId;
+  action?: 'showHelp' | 'downloadCv';
+  output: string;
 };
 
 export type NavigationData = {

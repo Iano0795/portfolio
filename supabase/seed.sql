@@ -304,11 +304,11 @@ insert into public.navigation_items (
   is_visible,
   is_active
 ) values
-('profile', 'Profile', 'identity.sys', 'cat /profile/identity.sys', null, 1, true, true),
-('about', 'About', 'origin.log', 'tail /logs/origin.log', null, 2, true, true),
-('capabilities', 'Capabilities', 'capabilities.map', 'open /maps/capabilities.map', null, 3, true, true),
-('skills', 'Skills', 'toolchain.bin', 'scan /bin/toolchain.bin', null, 4, true, true),
-('projects', 'Projects', 'builds/', 'ls /builds/', null, 5, true, true),
-('process', 'Process', 'process.pipeline', 'run /pipelines/process.pipeline', null, 6, true, true),
-('experience', 'Experience', 'career.log', 'tail -f /logs/career.log', null, 7, true, true),
-('contact', 'Contact', 'connect.sh', './connect.sh', null, 8, true, true);
+('profile', 'Profile', 'identity.sys', 'cat /profile/identity.sys', 'user', 1, true, true),
+('about', 'About', 'origin.log', 'tail /logs/origin.log', 'file-text', 2, true, true),
+('capabilities', 'Capabilities', 'capabilities.map', 'open /maps/capabilities.map', 'network', 3, true, true),
+('skills', 'Skills', 'toolchain.bin', 'scan /bin/toolchain.bin', 'cpu', 4, true, true),
+('projects', 'Projects', 'builds/', 'ls /builds/', 'folder-git', 5, true, true),
+('process', 'Process', 'process.pipeline', 'run /pipelines/process.pipeline', 'git-branch', 6, true, true),
+('experience', 'Experience', 'career.log', 'tail -f /logs/career.log', 'briefcase', 7, true, true),
+('contact', 'Contact', 'connect.sh', './connect.sh', 'send', 8, true, true);

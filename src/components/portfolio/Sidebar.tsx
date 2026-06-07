@@ -1,4 +1,16 @@
+import { Briefcase, Cpu, FileText, FolderGit2, GitBranch, Network, Send, UserRound, type LucideIcon } from 'lucide-react';
 import type { NavigationItem, QuickCommand, SectionId, SiteConfig } from '@/types/portfolio';
+
+const navigationIcons: Record<NavigationItem['icon'], LucideIcon> = {
+  user: UserRound,
+  'file-text': FileText,
+  network: Network,
+  cpu: Cpu,
+  'folder-git': FolderGit2,
+  'git-branch': GitBranch,
+  briefcase: Briefcase,
+  send: Send,
+};
 
 type SidebarProps = {
   activeSection: SectionId;
@@ -25,25 +37,33 @@ export function Sidebar({ activeSection, booted, quickCommands, sections, site, 
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {sections.map((section, index) => {
+        {sections.map((section) => {
           const active = activeSection === section.id;
+          const Icon = navigationIcons[section.icon];
           return (
             <button
               key={section.id}
               onClick={() => onSectionChange(section.id)}
-              className={`w-full text-left px-3 py-2 font-mono text-sm transition-all duration-200 group border ${
+              className={`w-full text-left px-3 py-2.5 font-mono text-sm transition-all duration-200 group border ${
                 active
                   ? 'bg-[#00ff88]/10 border-[#00ff88]/45 text-[#00ff88] shadow-[inset_3px_0_0_#00ff88,0_0_16px_rgba(0,255,136,0.12)]'
                   : 'text-gray-400 bg-[#050812]/30 border-transparent hover:text-[#00ff88] hover:bg-[#00ff88]/5 hover:border-[#00ff88]/20'
               }`}
             >
               <span className="flex items-start gap-3">
-                <span className={active ? 'text-cyan-400' : 'text-gray-600 group-hover:text-cyan-400'}>
-                  {String(index + 1).padStart(2, '0')}
+                <span
+                  className={`mt-0.5 flex h-5 w-5 items-center justify-center transition-all duration-200 ${
+                    active
+                      ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(0,217,255,0.55)]'
+                      : 'text-gray-600 group-hover:text-cyan-400 group-hover:drop-shadow-[0_0_6px_rgba(0,217,255,0.35)]'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <Icon size={16} strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[13px] leading-tight">{section.label}</span>
-                  <span className={`block text-[11px] leading-tight mt-1 ${active ? 'text-cyan-300' : 'text-gray-600 group-hover:text-gray-400'}`}>
+                  <span className="block text-[13px] leading-snug">{section.label}</span>
+                  <span className={`block text-[11px] leading-snug mt-1 tracking-[0.02em] ${active ? 'text-cyan-300' : 'text-gray-600 group-hover:text-gray-400'}`}>
                     /{section.module}
                   </span>
                 </span>
