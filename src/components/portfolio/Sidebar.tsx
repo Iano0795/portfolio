@@ -1,15 +1,16 @@
-import type { QuickCommand, Section, SectionConfig } from '@/types/portfolio';
+import type { NavigationItem, QuickCommand, SectionId, SiteConfig } from '@/types/portfolio';
 
 type SidebarProps = {
-  activeSection: Section;
+  activeSection: SectionId;
   booted: boolean;
   quickCommands: QuickCommand[];
-  sections: SectionConfig[];
+  sections: NavigationItem[];
+  site: SiteConfig;
   onQuickCommand: (item: QuickCommand) => void;
-  onSectionChange: (section: Section) => void;
+  onSectionChange: (section: SectionId) => void;
 };
 
-export function Sidebar({ activeSection, booted, quickCommands, sections, onQuickCommand, onSectionChange }: SidebarProps) {
+export function Sidebar({ activeSection, booted, quickCommands, sections, site, onQuickCommand, onSectionChange }: SidebarProps) {
   return (
     <aside
       className={`hidden md:flex w-72 bg-[#090d16]/95 border-r border-[#00ff88]/20 flex-col shadow-[0_0_20px_rgba(0,255,136,0.04)] transition-all duration-500 delay-150 ${
@@ -17,9 +18,9 @@ export function Sidebar({ activeSection, booted, quickCommands, sections, onQuic
       }`}
     >
       <div className="p-3 border-b border-[#00ff88]/10">
-        <div className="font-mono text-xs text-gray-500 mb-2">/SYSTEM MODULES</div>
+        <div className="font-mono text-xs text-gray-500 mb-2">{site.sidebar.title}</div>
         <div className="text-xs text-gray-400 leading-relaxed">
-          Switch modules from requirement to secure platform delivery.
+          {site.sidebar.description}
         </div>
       </div>
 
@@ -46,7 +47,7 @@ export function Sidebar({ activeSection, booted, quickCommands, sections, onQuic
                     /{section.module}
                   </span>
                 </span>
-                {active && <span className="ml-auto text-[10px] text-[#00ff88]">RUN</span>}
+                {active && <span className="ml-auto text-[10px] text-[#00ff88]">{site.sidebar.activeLabel}</span>}
               </span>
             </button>
           );
@@ -55,8 +56,8 @@ export function Sidebar({ activeSection, booted, quickCommands, sections, onQuic
 
       <div className="m-3 border border-cyan-400/20 bg-[#050812]/70">
         <div className="flex items-center justify-between border-b border-cyan-400/10 px-3 py-2 font-mono text-[11px]">
-          <span className="text-cyan-400">command.palette</span>
-          <span className="text-gray-600">visible actions</span>
+          <span className="text-cyan-400">{site.sidebar.commandPaletteTitle}</span>
+          <span className="text-gray-600">{site.sidebar.commandPaletteMeta}</span>
         </div>
         <div className="p-2 grid grid-cols-2 gap-1">
           {quickCommands.map((item) => (

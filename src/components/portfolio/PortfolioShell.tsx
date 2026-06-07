@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { QuickCommand, Section, SectionConfig } from '@/types/portfolio';
+import { capabilitiesData } from '@/data/capabilities';
+import { contactData } from '@/data/contact';
+import { experienceData } from '@/data/experience';
+import { navigationItems, quickCommands } from '@/data/navigation';
+import { processData } from '@/data/process';
+import { aboutData, profileData } from '@/data/profile';
+import { projectsData } from '@/data/projects';
+import { siteConfig } from '@/data/site';
+import { skillsData } from '@/data/skills';
+import type { QuickCommand, SectionId } from '@/types/portfolio';
 import { AboutSection } from '@/components/sections/AboutSection';
 import { CapabilitiesSection } from '@/components/sections/CapabilitiesSection';
 import { ContactSection } from '@/components/sections/ContactSection';
@@ -16,34 +25,15 @@ import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 
-const sections: SectionConfig[] = [
-  { id: 'profile', label: 'Profile', module: 'identity.sys', command: 'cat /profile/identity.sys' },
-  { id: 'about', label: 'About', module: 'origin.log', command: 'tail /logs/origin.log' },
-  { id: 'capabilities', label: 'Capabilities', module: 'capabilities.map', command: 'open /maps/capabilities.map' },
-  { id: 'skills', label: 'Skills', module: 'toolchain.bin', command: 'scan /bin/toolchain.bin' },
-  { id: 'projects', label: 'Projects', module: 'builds/', command: 'ls /builds/' },
-  { id: 'process', label: 'Process', module: 'process.pipeline', command: 'run /pipelines/process.pipeline' },
-  { id: 'experience', label: 'Experience', module: 'career.log', command: 'tail -f /logs/career.log' },
-  { id: 'contact', label: 'Contact', module: 'connect.sh', command: './connect.sh' },
-];
-
-const quickCommands: QuickCommand[] = [
-  { command: 'help', output: 'modules: identity, origin, capabilities, toolchain, builds, process, career, connect' },
-  { command: 'whoami', target: 'profile', output: 'Ian Kipkorir / full-stack engineer / solutions architect' },
-  { command: 'open builds', target: 'projects', output: 'Opening proof-of-work index...' },
-  { command: 'open toolchain', target: 'skills', output: 'Loading layered engineering toolchain...' },
-  { command: 'open career', target: 'experience', output: 'Streaming career growth stages...' },
-  { command: 'download cv', output: 'CV artifact is not attached in this build. Use connect.sh to request it.' },
-  { command: 'contact', target: 'contact', output: 'Opening secure collaboration channel...' },
-];
+const sections = navigationItems;
 
 export function PortfolioShell() {
-  const [activeSection, setActiveSection] = useState<Section>('profile');
+  const [activeSection, setActiveSection] = useState<SectionId>(siteConfig.defaultActiveSection);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [booted, setBooted] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [loadingModule, setLoadingModule] = useState(false);
-  const [consoleOutput, setConsoleOutput] = useState('IanOS ready. Type help or switch a module.');
+  const [consoleOutput, setConsoleOutput] = useState(siteConfig.initialConsoleOutput);
 
   const activeConfig = sections.find((section) => section.id === activeSection) ?? sections[0];
 
@@ -52,7 +42,7 @@ export function PortfolioShell() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSectionChange = (section: Section, output?: string) => {
+  const handleSectionChange = (section: SectionId, output?: string) => {
     if (output) {
       setConsoleOutput(output);
     }
@@ -64,7 +54,7 @@ export function PortfolioShell() {
     const nextModule = sections.find((item) => item.id === section)?.module ?? section;
     setTransitioning(true);
     setLoadingModule(true);
-    setConsoleOutput(output ?? `Loading ${nextModule}...`);
+    setConsoleOutput(output ?? `${siteConfig.loadingPrefix} ${nextModule}...`);
 
     setTimeout(() => {
       setActiveSection(section);
@@ -73,7 +63,7 @@ export function PortfolioShell() {
 
     setTimeout(() => {
       setTransitioning(false);
-      setConsoleOutput(`Mounted ${nextModule}.`);
+      setConsoleOutput(`${siteConfig.mountedConsolePrefix} ${nextModule}.`);
     }, 420);
   };
 
@@ -87,7 +77,7 @@ export function PortfolioShell() {
     setConsoleOutput(item.output);
   };
 
-  const handleMobileSectionChange = (section: Section) => {
+  const handleMobileSectionChange = (section: SectionId) => {
     handleSectionChange(section);
     setMobileMenuOpen(false);
   };
@@ -97,26 +87,27 @@ export function PortfolioShell() {
       case 'profile':
         return (
           <ProfileSection
+            data={profileData}
             onNavigate={handleSectionChange}
-            onDownloadCv={() => setConsoleOutput('CV artifact is not attached in this build. Use connect.sh to request it.')}
+            onDownloadCv={() => setConsoleOutput(siteConfig.messages.cvUnavailable)}
           />
         );
       case 'about':
-        return <AboutSection />;
+        return <AboutSection data={aboutData} />;
       case 'capabilities':
-        return <CapabilitiesSection />;
+        return <CapabilitiesSection data={capabilitiesData} />;
       case 'skills':
-        return <SkillsSection />;
+        return <SkillsSection data={skillsData} />;
       case 'projects':
-        return <ProjectsSection />;
+        return <ProjectsSection data={projectsData} />;
       case 'process':
-        return <ProcessSection />;
+        return <ProcessSection data={processData} />;
       case 'experience':
-        return <ExperienceSection />;
+        return <ExperienceSection data={experienceData} />;
       case 'contact':
-        return <ContactSection />;
+        return <ContactSection data={contactData} />;
       default:
-        return <ProfileSection onNavigate={handleSectionChange} onDownloadCv={() => undefined} />;
+        return <ProfileSection data={profileData} onNavigate={handleSectionChange} onDownloadCv={() => undefined} />;
     }
   };
 
@@ -139,6 +130,7 @@ export function PortfolioShell() {
         activeModule={activeConfig.module}
         booted={booted}
         mobileMenuOpen={mobileMenuOpen}
+        site={siteConfig}
         onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
 
@@ -148,6 +140,7 @@ export function PortfolioShell() {
           booted={booted}
           quickCommands={quickCommands}
           sections={sections}
+          site={siteConfig}
           onQuickCommand={runQuickCommand}
           onSectionChange={handleSectionChange}
         />
@@ -166,13 +159,14 @@ export function PortfolioShell() {
           activeConfig={activeConfig}
           booted={booted}
           loadingModule={loadingModule}
+          site={siteConfig}
           transitioning={transitioning}
         >
           {renderSection()}
         </MainPanel>
       </div>
 
-      <StatusBar booted={booted} consoleOutput={consoleOutput} />
+      <StatusBar booted={booted} consoleOutput={consoleOutput} site={siteConfig} />
     </div>
   );
 }

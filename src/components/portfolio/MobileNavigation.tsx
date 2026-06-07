@@ -1,11 +1,11 @@
-import type { QuickCommand, Section, SectionConfig } from '@/types/portfolio';
+import type { NavigationItem, QuickCommand, SectionId } from '@/types/portfolio';
 
 type MobileNavigationProps = {
-  activeSection: Section;
+  activeSection: SectionId;
   quickCommands: QuickCommand[];
-  sections: SectionConfig[];
+  sections: NavigationItem[];
   onQuickCommand: (item: QuickCommand) => void;
-  onSectionChange: (section: Section) => void;
+  onSectionChange: (section: SectionId) => void;
 };
 
 export function MobileNavigation({
