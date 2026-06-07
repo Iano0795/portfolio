@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 type FilterType = 'All' | 'Enterprise Platforms' | 'DXP/DWS' | 'Integrations' | 'Security';
@@ -71,9 +73,9 @@ export function ProjectsSection() {
 
   return (
     <section className="w-full max-w-7xl mx-auto">
-      <div className="mb-5 font-mono text-sm text-gray-500">
+      {/* <div className="mb-5 font-mono text-sm text-gray-500">
         <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ ls /builds/
-      </div>
+      </div> */}
 
       <div className="mb-7">
         <div className="font-mono text-xs text-[#00ff88] mb-3">builds/ / proof of work</div>

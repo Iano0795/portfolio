@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 const skillLayers = [
@@ -49,9 +51,9 @@ export function SkillsSection() {
 
   return (
     <section className="w-full max-w-7xl mx-auto">
-      <div className="mb-5 font-mono text-sm text-gray-500">
+      {/* <div className="mb-5 font-mono text-sm text-gray-500">
         <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ scan /bin/toolchain.bin
-      </div>
+      </div> */}
 
       <div className="mb-7 grid lg:grid-cols-[0.8fr_1.2fr] gap-6 items-end">
         <div>

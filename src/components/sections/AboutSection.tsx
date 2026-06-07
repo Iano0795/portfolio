@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 const storyPoints = [
@@ -28,9 +30,9 @@ export function AboutSection() {
 
   return (
     <section className="w-full max-w-7xl mx-auto">
-      <div className="mb-5 font-mono text-sm text-gray-500">
+      {/* <div className="mb-5 font-mono text-sm text-gray-500">
         <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ tail /logs/origin.log
-      </div>
+      </div> */}
 
       <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
         <div className="border border-[#00ff88]/25 bg-[#090d16]/80 p-6 md:p-7">

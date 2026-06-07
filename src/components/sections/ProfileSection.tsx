@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
 type ProfileSectionProps = {
@@ -51,9 +53,9 @@ export function ProfileSection({ onNavigate, onDownloadCv }: ProfileSectionProps
 
   return (
     <section className="w-full max-w-7xl mx-auto min-w-0">
-      <div className="mb-5 font-mono text-sm text-gray-500">
+      {/* <div className="mb-5 font-mono text-sm text-gray-500">
         <span className="text-[#00ff88]">ian@IanOS</span>:<span className="text-cyan-400">~</span>$ boot identity.sys
-      </div>
+      </div> */}
 
       <div className="grid xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-6">
         <div
