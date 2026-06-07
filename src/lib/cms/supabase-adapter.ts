@@ -36,6 +36,7 @@ import type {
   ExperienceEntry,
   LabelValue,
   NavigationData,
+  NavigationIconName,
   NavigationItem,
   PortfolioData,
   ProcessData,
@@ -54,6 +55,7 @@ import type {
 type JsonObject = Record<string, unknown>;
 
 const validSectionIds: SectionId[] = ['profile', 'about', 'capabilities', 'skills', 'projects', 'process', 'experience', 'contact'];
+const validNavigationIcons: NavigationIconName[] = ['user', 'file-text', 'network', 'cpu', 'folder-git', 'git-branch', 'briefcase', 'send'];
 const validProjectCategories: ProjectCategory[] = ['Enterprise Platforms', 'DXP/DWS', 'Integrations', 'Security'];
 
 function isObject(value: unknown): value is JsonObject {
@@ -85,6 +87,10 @@ function normalizeProjectCategory(value: string | null): ProjectCategory[] {
   }
 
   return validProjectCategories.includes(value as ProjectCategory) ? [value as ProjectCategory] : [];
+}
+
+function normalizeNavigationIcon(value: string | null | undefined, fallback: NavigationIconName): NavigationIconName {
+  return validNavigationIcons.includes(value as NavigationIconName) ? (value as NavigationIconName) : fallback;
 }
 
 function getProfileCoreStack(profile: CmsProfile | null) {
@@ -231,12 +237,16 @@ function normalizeNavigationItems(items: CmsNavigationItem[]): NavigationItem[] 
       return [];
     }
 
+    const localItem = navigationItems.find((navigationItem) => navigationItem.id === sectionId);
+
     return {
       id: sectionId,
       label: item.label,
       module: normalizeString(item.system_label),
       command: normalizeString(item.command),
+      icon: normalizeNavigationIcon(item.icon, localItem?.icon ?? 'user'),
       order: item.order_index ?? 0,
+      visible: item.is_visible ?? true,
       visibility: 'public' as const,
     };
   });

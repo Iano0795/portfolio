@@ -1,4 +1,16 @@
+import { Briefcase, Cpu, FileText, FolderGit2, GitBranch, Network, Send, UserRound, type LucideIcon } from 'lucide-react';
 import type { NavigationItem, QuickCommand, SectionId } from '@/types/portfolio';
+
+const navigationIcons: Record<NavigationItem['icon'], LucideIcon> = {
+  user: UserRound,
+  'file-text': FileText,
+  network: Network,
+  cpu: Cpu,
+  'folder-git': FolderGit2,
+  'git-branch': GitBranch,
+  briefcase: Briefcase,
+  send: Send,
+};
 
 type MobileNavigationProps = {
   activeSection: SectionId;
@@ -18,19 +30,27 @@ export function MobileNavigation({
   return (
     <div className="md:hidden absolute top-12 left-0 right-0 bg-[#090d16] border-b border-[#00ff88]/20 z-40 shadow-lg">
       <nav className="p-3 grid gap-1">
-        {sections.map((section) => (
-          <button
-            key={section.id}
-            onClick={() => onSectionChange(section.id)}
-            className={`w-full text-left px-3 py-2 font-mono text-sm transition-all border ${
-              activeSection === section.id
-                ? 'bg-[#00ff88]/10 border-[#00ff88]/40 text-[#00ff88]'
-                : 'text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 border-transparent'
-            }`}
-          >
-            {section.label} <span className="text-gray-600">/ {section.module}</span>
-          </button>
-        ))}
+        {sections.map((section) => {
+          const Icon = navigationIcons[section.icon];
+          return (
+            <button
+              key={section.id}
+              onClick={() => onSectionChange(section.id)}
+              className={`w-full text-left px-3 py-2 font-mono text-sm transition-all border ${
+                activeSection === section.id
+                  ? 'bg-[#00ff88]/10 border-[#00ff88]/40 text-[#00ff88]'
+                  : 'text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 border-transparent'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <Icon size={15} strokeWidth={1.8} className={activeSection === section.id ? 'text-cyan-300' : 'text-gray-600'} aria-hidden="true" />
+                <span>
+                  {section.label} <span className="text-gray-600">/ {section.module}</span>
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </nav>
       <div className="px-3 pb-3 flex flex-wrap gap-2">
         {quickCommands.map((item) => (

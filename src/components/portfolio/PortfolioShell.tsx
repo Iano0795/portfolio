@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { commandSuggestions, consoleCommands } from '@/data/commands';
 import type { PortfolioData, QuickCommand, SectionId } from '@/types/portfolio';
 import { AboutSection } from '@/components/sections/AboutSection';
 import { CapabilitiesSection } from '@/components/sections/CapabilitiesSection';
@@ -70,6 +71,43 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
     }
 
     setConsoleOutput(item.output);
+  };
+
+  const handleConsoleCommand = (rawCommand: string) => {
+    const normalizedCommand = rawCommand.trim().toLowerCase().replace(/\s+/g, ' ');
+    const command = consoleCommands.find((item) => item.command === normalizedCommand);
+
+    if (!command) {
+      const missingCommandMessage = `command not found: ${rawCommand.trim()}`;
+      setConsoleOutput(missingCommandMessage);
+      return [missingCommandMessage, 'Type "help" to list available commands.'];
+    }
+
+    if (command.action === 'showHelp') {
+      setConsoleOutput('Available commands loaded.');
+      return [command.output, ...commandSuggestions.map((suggestion) => `- ${suggestion}`)];
+    }
+
+    if (command.action === 'downloadCv') {
+      if (data.resume?.fileUrl) {
+        window.open(data.resume.fileUrl, '_blank', 'noopener,noreferrer');
+        const resumeMessage = `Opening ${data.resume.fileName || 'CV'}...`;
+        setConsoleOutput(resumeMessage);
+        return [resumeMessage];
+      }
+
+      setConsoleOutput(site.messages.cvUnavailable);
+      return [site.messages.cvUnavailable];
+    }
+
+    if (command.target) {
+      handleSectionChange(command.target, command.output);
+      setMobileMenuOpen(false);
+      return [command.output];
+    }
+
+    setConsoleOutput(command.output);
+    return [command.output];
   };
 
   const handleMobileSectionChange = (section: SectionId) => {
@@ -161,7 +199,7 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
         </MainPanel>
       </div>
 
-      <StatusBar booted={booted} consoleOutput={consoleOutput} site={site} />
+      <StatusBar booted={booted} consoleOutput={consoleOutput} site={site} onSubmitCommand={handleConsoleCommand} />
     </div>
   );
 }

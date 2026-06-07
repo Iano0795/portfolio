@@ -126,6 +126,21 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-terminal), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    line-height: 1.6;
+    letter-spacing: 0;
+  }
+
+  .font-mono {
+    font-family: var(--font-terminal), 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  .font-sans,
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), 'Space Grotesk', Inter, ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0;
   }
 
   /**
@@ -140,19 +155,19 @@
   h1 {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: 1.12;
   }
 
   h2 {
     font-size: var(--text-xl);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: 1.18;
   }
 
   h3 {
     font-size: var(--text-lg);
     font-weight: var(--font-weight-medium);
-    line-height: 1.5;
+    line-height: 1.22;
   }
 
   h4 {
