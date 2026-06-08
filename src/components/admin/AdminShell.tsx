@@ -1,15 +1,19 @@
 import type { ReactNode } from 'react';
-import type { AdminRecord } from '@/lib/auth/admin';
+import type { User } from '@supabase/supabase-js';
+import type { Portfolio, PortfolioRole } from '@/types/portfolio';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminStatusBar } from './AdminStatusBar';
 import { AdminTopBar } from './AdminTopBar';
 
 type AdminShellProps = {
-  admin: AdminRecord;
+  activeItem?: 'dashboard' | 'profile';
+  portfolio: Portfolio;
+  user: User;
+  role: PortfolioRole;
   children: ReactNode;
 };
 
-export function AdminShell({ admin, children }: AdminShellProps) {
+export function AdminShell({ activeItem = 'dashboard', portfolio, user, role, children }: AdminShellProps) {
   const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? 'local';
 
   return (
@@ -26,14 +30,14 @@ export function AdminShell({ admin, children }: AdminShellProps) {
         }}
       />
 
-      <AdminTopBar adminEmail={admin.email} environment={environment} />
+      <AdminTopBar environment={environment} portfolio={portfolio} userEmail={user.email ?? 'unknown'} />
 
       <div className="relative z-10 flex min-h-0 flex-1 overflow-hidden">
-        <AdminSidebar />
+        <AdminSidebar activeItem={activeItem} portfolioSlug={portfolio.slug} />
         <section className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">{children}</section>
       </div>
 
-      <AdminStatusBar adminRole={admin.role ?? 'admin'} environment={environment} />
+      <AdminStatusBar environment={environment} portfolioSlug={portfolio.slug} role={role} />
     </main>
   );
 }

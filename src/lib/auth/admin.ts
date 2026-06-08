@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 import { ADMIN_ACCESS_DENIED_MESSAGE } from '@/lib/auth/constants';
-import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/session';
+import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
 
 export { ADMIN_ACCESS_DENIED_MESSAGE };
 
