@@ -1,30 +1,85 @@
 import { Activity, Database, FileText, Rocket, ShieldCheck, Terminal } from 'lucide-react';
+import type { Portfolio, PortfolioRole } from '@/types/portfolio';
+import { AdminPlaceholderPanel } from './AdminPlaceholderPanel';
+import { AdminStatCard } from './AdminStatCard';
 
-const metricCards = [
-  { label: 'Active Projects', value: 'CMS-ready', detail: 'Project records wired for protected editing.', icon: Rocket },
-  { label: 'Skills', value: 'Grouped', detail: 'Skill matrix schema is available.', icon: Database },
-  { label: 'Experience Entries', value: 'Timeline', detail: 'Career entries are staged for CRUD.', icon: Activity },
-  { label: 'Resume Version', value: 'Pending', detail: 'Asset controls will mount in a later task.', icon: FileText },
-  { label: 'Portfolio Status', value: 'Online', detail: 'Public rendering remains adapter-driven.', icon: ShieldCheck },
-];
+type AdminDashboardSummary = {
+  activeProjects: number | null;
+  skills: number | null;
+  experienceEntries: number | null;
+  resumeVersion: string | null;
+};
 
 const contentRows = [
   ['profile.editor', 'Profile', 'Locked', 'CRUD pending'],
   ['projects.editor', 'Projects', 'Locked', 'CRUD pending'],
   ['skills.matrix', 'Skills', 'Locked', 'CRUD pending'],
-  ['resume.asset', 'Resume', 'Locked', 'Upload pending'],
+  ['career.timeline', 'Experience', 'Locked', 'CRUD pending'],
+  ['contact.links', 'Contact', 'Locked', 'CRUD pending'],
 ];
 
-export function AdminDashboard() {
+type AdminDashboardProps = {
+  portfolio: Portfolio;
+  role: PortfolioRole;
+  summary?: AdminDashboardSummary;
+};
+
+function canManage(role: PortfolioRole) {
+  return role === 'owner' || role === 'admin' || role === 'editor';
+}
+
+export function AdminDashboard({ portfolio, role, summary }: AdminDashboardProps) {
+  const manager = canManage(role);
+  const metricCards = [
+    {
+      label: 'Active Projects',
+      value: summary?.activeProjects === null || summary?.activeProjects === undefined ? 'Pending' : String(summary.activeProjects),
+      detail: 'Portfolio-scoped project records.',
+      icon: Rocket,
+    },
+    {
+      label: 'Skills',
+      value: summary?.skills === null || summary?.skills === undefined ? 'Pending' : String(summary.skills),
+      detail: 'Portfolio-scoped skill entries.',
+      icon: Database,
+    },
+    {
+      label: 'Experience Entries',
+      value:
+        summary?.experienceEntries === null || summary?.experienceEntries === undefined
+          ? 'Pending'
+          : String(summary.experienceEntries),
+      detail: 'Portfolio-scoped timeline records.',
+      icon: Activity,
+    },
+    {
+      label: 'Resume Version',
+      value: summary?.resumeVersion ?? 'Pending',
+      detail: 'Resume asset controls mount in a later task.',
+      icon: FileText,
+    },
+    {
+      label: 'Portfolio Status',
+      value: portfolio.isActive ? 'Online' : 'Offline',
+      detail: `${portfolio.slug} public content remains adapter-driven.`,
+      icon: ShieldCheck,
+    },
+  ];
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       <section className="grid gap-4 lg:grid-cols-[1fr_0.42fr]">
         <div className="border border-[#00ff88]/25 bg-[#090d16]/80 p-5 shadow-[0_0_30px_rgba(0,255,136,0.07)] md:p-6">
           <div className="mb-3 font-mono text-xs text-cyan-400">dashboard.kernel</div>
-          <h1 className="mb-3 text-3xl font-bold leading-tight text-white md:text-4xl">IanOS CMS command surface</h1>
+          <h1 className="mb-3 text-3xl font-bold leading-tight text-white md:text-4xl">{portfolio.title}</h1>
           <p className="max-w-3xl text-sm leading-relaxed text-gray-400 md:text-base">
-            Protected admin access is active. Content modules are visible for orientation and remain locked until editor screens are implemented.
+            Protected portfolio access is active. Content modules are visible for orientation and remain locked until editor screens are implemented.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2 font-mono text-xs">
+            <span className="border border-cyan-400/25 px-2 py-1 text-cyan-300">/{portfolio.slug}</span>
+            <span className="border border-[#00ff88]/25 px-2 py-1 text-[#00ff88]">{role}</span>
+            <span className="border border-gray-700 px-2 py-1 text-gray-400">{portfolio.brandName ?? portfolio.ownerName}</span>
+          </div>
         </div>
 
         <div className="border border-cyan-400/20 bg-black/25 p-5">
@@ -36,9 +91,9 @@ export function AdminDashboard() {
             <div>
               <span className="text-[#00ff88]">$</span> auth.verify_admin
             </div>
-            <div className="text-cyan-300">admin row confirmed via public.admins</div>
+            <div className="text-cyan-300">membership confirmed via portfolio_members</div>
             <div>
-              <span className="text-[#00ff88]">$</span> mount dashboard
+              <span className="text-[#00ff88]">$</span> mount {portfolio.slug}.dashboard
             </div>
             <div className="text-cyan-300">dashboard shell online</div>
           </div>
@@ -46,20 +101,9 @@ export function AdminDashboard() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {metricCards.map((card) => {
-          const Icon = card.icon;
-
-          return (
-            <article key={card.label} className="border border-gray-700 bg-[#090d16]/80 p-4 transition-colors hover:border-[#00ff88]/35">
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div className="font-mono text-xs text-gray-500">{card.label}</div>
-                <Icon className="h-4 w-4 text-cyan-400" aria-hidden="true" />
-              </div>
-              <div className="mb-2 text-xl font-semibold text-white">{card.value}</div>
-              <p className="text-xs leading-relaxed text-gray-500">{card.detail}</p>
-            </article>
-          );
-        })}
+        {metricCards.map((card) => (
+          <AdminStatCard key={card.label} {...card} />
+        ))}
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_0.42fr]">
@@ -90,25 +134,27 @@ export function AdminDashboard() {
         </div>
 
         <div className="grid gap-6">
-          <aside className="border border-[#00ff88]/20 bg-black/25 p-4">
-            <div className="mb-3 font-mono text-xs text-[#00ff88]">Recent Activity</div>
+          <AdminPlaceholderPanel title="Recent Activity" tone="green">
             <div className="space-y-3 font-mono text-xs text-gray-500">
               <div>admin.session.created</div>
-              <div>dashboard.shell.mounted</div>
+              <div>{portfolio.slug}.dashboard.shell.mounted</div>
               <div>content.modules.locked</div>
             </div>
-          </aside>
+          </AdminPlaceholderPanel>
 
-          <aside className="border border-cyan-400/20 bg-black/25 p-4">
-            <div className="mb-3 font-mono text-xs text-cyan-400">Publish Controls</div>
+          <AdminPlaceholderPanel title="Publish Controls">
             <button
               type="button"
-              disabled
-              className="w-full cursor-not-allowed border border-gray-700 px-3 py-2 font-mono text-xs text-gray-600"
+              disabled={!manager}
+              className={`w-full border px-3 py-2 font-mono text-xs ${
+                manager
+                  ? 'border-[#00ff88]/35 text-[#00ff88] hover:bg-[#00ff88]/10'
+                  : 'cursor-not-allowed border-gray-700 text-gray-600'
+              }`}
             >
-              Publish pipeline locked
+              {manager ? 'Publish controls staged' : 'Publish controls locked'}
             </button>
-          </aside>
+          </AdminPlaceholderPanel>
         </div>
       </section>
     </div>

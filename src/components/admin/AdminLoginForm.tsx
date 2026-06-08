@@ -22,7 +22,16 @@ export function AdminLoginForm({ initialError }: AdminLoginFormProps) {
     setError('');
     setSubmitting(true);
 
-    const supabase = createBrowserSupabaseClient();
+    let supabase: ReturnType<typeof createBrowserSupabaseClient>;
+
+    try {
+      supabase = createBrowserSupabaseClient();
+    } catch (clientError) {
+      setError(clientError instanceof Error ? clientError.message : 'Missing Supabase browser environment variables.');
+      setSubmitting(false);
+      return;
+    }
+
     const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -30,22 +39,6 @@ export function AdminLoginForm({ initialError }: AdminLoginFormProps) {
 
     if (loginError || !data.session || !data.user) {
       setError(loginError?.message || 'Invalid email or password.');
-      setSubmitting(false);
-      return;
-    }
-
-    const { data: portfolioMember, error: portfolioMemberError } = await supabase
-      .from('portfolio_members')
-      .select('id,user_id,email,role,created_at')
-      .eq('user_id', data.user.id)
-      .eq('is_active', true)
-      .limit(1)
-      .maybeSingle();
-
-    if (portfolioMemberError || !portfolioMember) {
-      await supabase.auth.signOut();
-      await fetch('/admin/session', { method: 'DELETE' });
-      setError(ADMIN_ACCESS_DENIED_MESSAGE);
       setSubmitting(false);
       return;
     }
@@ -65,12 +58,14 @@ export function AdminLoginForm({ initialError }: AdminLoginFormProps) {
     if (!response.ok) {
       await supabase.auth.signOut();
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-      setError(payload?.error || 'Unable to open the IanOS Control Center.');
+      setError(payload?.error || ADMIN_ACCESS_DENIED_MESSAGE);
       setSubmitting(false);
       return;
     }
 
-    router.push('/admin');
+    const payload = (await response.json().catch(() => null)) as { redirectTo?: string } | null;
+
+    router.push(payload?.redirectTo || '/admin');
     router.refresh();
   };
 
@@ -97,7 +92,7 @@ export function AdminLoginForm({ initialError }: AdminLoginFormProps) {
               <div className="h-3 w-3 rounded-full bg-[#27c93f] shadow-[0_0_8px_rgba(39,201,63,0.45)]" />
             </div>
             <div>
-              <h1 className="text-sm font-semibold leading-none text-[#00ff88]">IanOS Control Center</h1>
+              <h1 className="text-sm font-semibold leading-none text-[#00ff88]">Portfolio Control Center</h1>
               <div className="mt-1 font-mono text-[10px] text-gray-500">secure_admin.login</div>
             </div>
           </div>
@@ -110,7 +105,7 @@ export function AdminLoginForm({ initialError }: AdminLoginFormProps) {
               <Terminal className="h-3.5 w-3.5" aria-hidden="true" />
               <span>auth.sequence</span>
             </div>
-            <div>Enter IanOS admin credentials to mount the protected CMS shell.</div>
+            <div>Enter portfolio admin credentials to mount the protected CMS shell.</div>
           </div>
 
           {error && (

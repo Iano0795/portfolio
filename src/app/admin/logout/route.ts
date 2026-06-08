@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { clearAdminSessionCookies, createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/session';
+import { clearAdminSessionCookies, createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
 
 export const dynamic = 'force-dynamic';
 

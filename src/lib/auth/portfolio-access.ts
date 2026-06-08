@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js';
-import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/session';
+import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
 import type { Portfolio, PortfolioMember, PortfolioRole } from '@/types/portfolio';
 
 type CmsPortfolioRow = {
@@ -60,22 +60,16 @@ function normalizePortfolioMember(row: CmsPortfolioMemberRow): PortfolioMember {
   };
 }
 
-async function getAuthenticatedUser() {
-  const tokens = await getAdminSessionTokens();
-
-  if (!tokens) {
-    return null;
-  }
-
-  const supabase = createAdminSupabaseClient(tokens.accessToken);
-  const { data, error } = await supabase.auth.getUser(tokens.accessToken);
+async function getAuthenticatedUser(accessToken: string) {
+  const supabase = createAdminSupabaseClient(accessToken);
+  const { data, error } = await supabase.auth.getUser(accessToken);
 
   if (error || !data.user) {
     return null;
   }
 
   return {
-    accessToken: tokens.accessToken,
+    accessToken,
     user: data.user,
   };
 }
@@ -84,8 +78,8 @@ function isManagerRole(role: PortfolioRole) {
   return role === 'owner' || role === 'admin' || role === 'editor';
 }
 
-export async function getUserPortfolios(): Promise<UserPortfolioAccess[]> {
-  const auth = await getAuthenticatedUser();
+export async function getUserPortfoliosForAccessToken(accessToken: string): Promise<UserPortfolioAccess[]> {
+  const auth = await getAuthenticatedUser(accessToken);
 
   if (!auth) {
     return [];
@@ -130,6 +124,16 @@ export async function getUserPortfolios(): Promise<UserPortfolioAccess[]> {
       member: normalizePortfolioMember(memberRow),
     };
   });
+}
+
+export async function getUserPortfolios(): Promise<UserPortfolioAccess[]> {
+  const tokens = await getAdminSessionTokens();
+
+  if (!tokens) {
+    return [];
+  }
+
+  return getUserPortfoliosForAccessToken(tokens.accessToken);
 }
 
 export async function getCurrentPortfolioForUser(preferredSlug?: string): Promise<UserPortfolioAccess | null> {

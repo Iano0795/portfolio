@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { ADMIN_ACCESS_DENIED_MESSAGE, getAdminFromAccessToken } from '@/lib/auth/admin';
-import { clearAdminSessionCookies, setAdminSessionCookies } from '@/lib/auth/session';
+import { ADMIN_ACCESS_DENIED_MESSAGE } from '@/lib/auth/constants';
+import { getUserPortfoliosForAccessToken } from '@/lib/auth/portfolio-access';
+import { clearAdminSessionCookies, setAdminSessionCookies } from '@/lib/auth/admin-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +20,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing Supabase session tokens.' }, { status: 400 });
   }
 
-  const currentAdmin = await getAdminFromAccessToken(body.accessToken);
+  const portfolios = await getUserPortfoliosForAccessToken(body.accessToken).catch(() => []);
 
-  if (!currentAdmin) {
+  if (portfolios.length === 0) {
     await clearAdminSessionCookies();
 
     return NextResponse.json({ error: ADMIN_ACCESS_DENIED_MESSAGE }, { status: 403 });
@@ -33,7 +34,12 @@ export async function POST(request: Request) {
     expires_in: body.expiresIn,
   });
 
-  return NextResponse.json({ ok: true });
+  const redirectTo =
+    portfolios.length === 1
+      ? `/admin/portfolio/${portfolios[0].portfolio.slug}`
+      : '/admin/select-portfolio';
+
+  return NextResponse.json({ ok: true, redirectTo });
 }
 
 export async function DELETE() {
