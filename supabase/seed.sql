@@ -1,9 +1,11 @@
 -- CMS seed data generated from the current src/data files.
+-- Existing seed content belongs to Ian's portfolio (`portfolios.slug = 'ian'`).
+-- Violet's portfolio shell is created here, but Violet content is intentionally not fully seeded yet.
 --
 -- RLS assumptions:
 -- - Public users can read rows marked active by the migration policies.
--- - Only authenticated users listed in public.admins can insert, update, or delete CMS content.
--- - The first admin must be created manually after a Supabase Auth user exists.
+-- - Authenticated users can manage content only for portfolios where they are active owner/admin/editor members.
+-- - The legacy public.admins table may still bootstrap portfolio creation temporarily.
 --
 -- This seed intentionally does not insert resume_assets because there is no real resume URL yet.
 
@@ -25,7 +27,46 @@ restart identity cascade;
 -- insert into public.admins (user_id, email, role)
 -- values ('00000000-0000-0000-0000-000000000000', 'admin@example.com', 'admin');
 
+insert into public.portfolios (slug, owner_name, title, app_name, brand_name, is_active)
+values ('ian', 'Ian Kipkorir', 'IanOS Portfolio', 'ian-portfolio', 'IanOS', true)
+on conflict (slug) do update
+set
+  owner_name = excluded.owner_name,
+  title = excluded.title,
+  app_name = excluded.app_name,
+  brand_name = excluded.brand_name,
+  is_active = excluded.is_active;
+
+insert into public.portfolios (slug, owner_name, title, app_name, brand_name, is_active)
+values ('violet', 'Violet Achieng', 'Violet Achieng Portfolio', 'violet-portfolio', 'VioletSec', true)
+on conflict (slug) do update
+set
+  owner_name = excluded.owner_name,
+  title = excluded.title,
+  app_name = excluded.app_name,
+  brand_name = excluded.brand_name,
+  is_active = excluded.is_active;
+
+-- Grant Ian access:
+-- insert into public.portfolio_members (portfolio_id, user_id, email, role)
+-- select p.id, u.id, u.email, 'owner'
+-- from public.portfolios p
+-- cross join auth.users u
+-- where p.slug = 'ian'
+-- and u.email = 'ian-email@example.com'
+-- on conflict do nothing;
+--
+-- Grant Violet access:
+-- insert into public.portfolio_members (portfolio_id, user_id, email, role)
+-- select p.id, u.id, u.email, 'owner'
+-- from public.portfolios p
+-- cross join auth.users u
+-- where p.slug = 'violet'
+-- and u.email = 'violet-email@example.com'
+-- on conflict do nothing;
+
 insert into public.profile (
+  portfolio_id,
   name,
   headline,
   subheadline,
@@ -40,6 +81,7 @@ insert into public.profile (
   cta_contact_label,
   is_active
 ) values (
+  (select id from public.portfolios where slug = 'ian'),
   'Ian Kipkorir',
   'Full-Stack Engineer & Solutions Architect',
   'I turn complex business requirements into secure, scalable digital platforms — from prototype and architecture to production-ready systems.',
@@ -71,6 +113,7 @@ insert into public.profile (
 );
 
 insert into public.projects (
+  portfolio_id,
   title,
   slug,
   category,
@@ -86,6 +129,7 @@ insert into public.projects (
   is_active
 ) values
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Digital Workspace Platform',
   'dq-digital-workspace-platform',
   'Enterprise Platforms',
@@ -101,6 +145,7 @@ insert into public.projects (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Digital Banking DXP',
   'qnb-digital-banking-dxp',
   'Enterprise Platforms',
@@ -116,6 +161,7 @@ insert into public.projects (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Khalifa Fund Enterprise Journey Platform',
   'khalifa-fund-enterprise-journey-platform',
   'Enterprise Platforms',
@@ -131,6 +177,7 @@ insert into public.projects (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Microsoft Omnichannel Chat Integration',
   'microsoft-omnichannel-chat-integration',
   'Integrations',
@@ -146,6 +193,7 @@ insert into public.projects (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Cybersecurity Labs & CTF Projects',
   'cybersecurity-labs-ctf-projects',
   'Security',
@@ -165,32 +213,33 @@ insert into public.projects (
 -- the MVP projects table has a single text category column. Preserve multi-category
 -- filtering locally until a future taxonomy table or jsonb category field is added.
 
-insert into public.skills (name, category, level, order_index, is_active) values
-('React', 'Interface Layer', 'loaded', 1, true),
-('Next.js', 'Interface Layer', 'loaded', 2, true),
-('TypeScript', 'Interface Layer', 'loaded', 3, true),
-('Tailwind', 'Interface Layer', 'loaded', 4, true),
-('Node.js', 'Service Layer', 'loaded', 1, true),
-('Express', 'Service Layer', 'loaded', 2, true),
-('GraphQL', 'Service Layer', 'loaded', 3, true),
-('REST', 'Service Layer', 'loaded', 4, true),
-('PostgreSQL', 'Data Layer', 'loaded', 1, true),
-('Prisma', 'Data Layer', 'loaded', 2, true),
-('Supabase', 'Data Layer', 'loaded', 3, true),
-('Vercel', 'Platform Layer', 'loaded', 1, true),
-('Docker', 'Platform Layer', 'loaded', 2, true),
-('Git', 'Platform Layer', 'loaded', 3, true),
-('Nmap', 'Security Layer', 'loaded', 1, true),
-('Wireshark', 'Security Layer', 'loaded', 2, true),
-('Burp Suite', 'Security Layer', 'loaded', 3, true),
-('SIEM basics', 'Security Layer', 'loaded', 4, true),
-('Figma', 'Design/AI Layer', 'loaded', 1, true),
-('Magic Patterns', 'Design/AI Layer', 'loaded', 2, true),
-('Codex', 'Design/AI Layer', 'loaded', 3, true);
+insert into public.skills (portfolio_id, name, category, level, order_index, is_active) values
+((select id from public.portfolios where slug = 'ian'), 'React', 'Interface Layer', 'loaded', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Next.js', 'Interface Layer', 'loaded', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'TypeScript', 'Interface Layer', 'loaded', 3, true),
+((select id from public.portfolios where slug = 'ian'), 'Tailwind', 'Interface Layer', 'loaded', 4, true),
+((select id from public.portfolios where slug = 'ian'), 'Node.js', 'Service Layer', 'loaded', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Express', 'Service Layer', 'loaded', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'GraphQL', 'Service Layer', 'loaded', 3, true),
+((select id from public.portfolios where slug = 'ian'), 'REST', 'Service Layer', 'loaded', 4, true),
+((select id from public.portfolios where slug = 'ian'), 'PostgreSQL', 'Data Layer', 'loaded', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Prisma', 'Data Layer', 'loaded', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'Supabase', 'Data Layer', 'loaded', 3, true),
+((select id from public.portfolios where slug = 'ian'), 'Vercel', 'Platform Layer', 'loaded', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Docker', 'Platform Layer', 'loaded', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'Git', 'Platform Layer', 'loaded', 3, true),
+((select id from public.portfolios where slug = 'ian'), 'Nmap', 'Security Layer', 'loaded', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Wireshark', 'Security Layer', 'loaded', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'Burp Suite', 'Security Layer', 'loaded', 3, true),
+((select id from public.portfolios where slug = 'ian'), 'SIEM basics', 'Security Layer', 'loaded', 4, true),
+((select id from public.portfolios where slug = 'ian'), 'Figma', 'Design/AI Layer', 'loaded', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Magic Patterns', 'Design/AI Layer', 'loaded', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'Codex', 'Design/AI Layer', 'loaded', 3, true);
 
 -- Skill group accent colors and paths remain local UI metadata in src/data/skills.ts.
 
 insert into public.experience (
+  portfolio_id,
   stage_label,
   title,
   organization,
@@ -201,6 +250,7 @@ insert into public.experience (
   is_active
 ) values
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Stage 01',
   'Full-Stack Execution',
   null,
@@ -211,6 +261,7 @@ insert into public.experience (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Stage 02',
   'Platform Thinking',
   null,
@@ -221,6 +272,7 @@ insert into public.experience (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Stage 03',
   'Solution Leadership',
   null,
@@ -231,6 +283,7 @@ insert into public.experience (
   true
 ),
 (
+  (select id from public.portfolios where slug = 'ian'),
   'Stage 04',
   'Security-Aware Engineering',
   null,
@@ -241,34 +294,35 @@ insert into public.experience (
   true
 );
 
-insert into public.capabilities (title, description, icon, order_index, is_active) values
-('Translate Requirements', 'Convert business journeys and specs into buildable systems.', null, 1, true),
-('Design Platform Architecture', 'Structure frontend, backend, workflows, APIs, and access models.', null, 2, true),
-('Build Working Prototypes', 'Move ideas from static requirements to usable product experiences.', null, 3, true),
-('Secure the System Thinking', 'Apply cybersecurity awareness to access, data, APIs, logging, and operations.', null, 4, true);
+insert into public.capabilities (portfolio_id, title, description, icon, order_index, is_active) values
+((select id from public.portfolios where slug = 'ian'), 'Translate Requirements', 'Convert business journeys and specs into buildable systems.', null, 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Design Platform Architecture', 'Structure frontend, backend, workflows, APIs, and access models.', null, 2, true),
+((select id from public.portfolios where slug = 'ian'), 'Build Working Prototypes', 'Move ideas from static requirements to usable product experiences.', null, 3, true),
+((select id from public.portfolios where slug = 'ian'), 'Secure the System Thinking', 'Apply cybersecurity awareness to access, data, APIs, logging, and operations.', null, 4, true);
 
 -- Capability signal labels remain local until a metadata/jsonb field is added:
 -- business -> system, shape -> platform, spec -> prototype, surface -> controls.
 
-insert into public.process_steps (title, description, command, label, order_index, is_active) values
-('Requirement', null, null, 'stage.01', 1, true),
-('Architecture', null, null, 'stage.02', 2, true),
-('Prototype', null, null, 'stage.03', 3, true),
-('Implementation', null, null, 'stage.04', 4, true),
-('Review', null, null, 'stage.05', 5, true);
+insert into public.process_steps (portfolio_id, title, description, command, label, order_index, is_active) values
+((select id from public.portfolios where slug = 'ian'), 'Requirement', null, null, 'stage.01', 1, true),
+((select id from public.portfolios where slug = 'ian'), 'Architecture', null, null, 'stage.02', 2, true),
+((select id from public.portfolios where slug = 'ian'), 'Prototype', null, null, 'stage.03', 3, true),
+((select id from public.portfolios where slug = 'ian'), 'Implementation', null, null, 'stage.04', 4, true),
+((select id from public.portfolios where slug = 'ian'), 'Review', null, null, 'stage.05', 5, true);
 
 -- Terminal pipeline and review checklist content remain local until process metadata
 -- fields or related child tables are added.
 
-insert into public.contact_links (label, type, url, icon, order_index, is_active) values
-('LINKEDIN', 'linkedin', 'https://linkedin.com/in/iankipkorir', null, 1, true),
-('GITHUB', 'github', 'https://github.com/iankipkorir', null, 2, true);
+insert into public.contact_links (portfolio_id, label, type, url, icon, order_index, is_active) values
+((select id from public.portfolios where slug = 'ian'), 'LINKEDIN', 'linkedin', 'https://linkedin.com/in/iankipkorir', null, 1, true),
+((select id from public.portfolios where slug = 'ian'), 'GITHUB', 'github', 'https://github.com/iankipkorir', null, 2, true);
 
 -- The CV contact tile has no URL today. Add it to resume_assets after a real file_url exists.
 -- Contact form labels, demo send states, availability copy, and collaboration signals
 -- remain local until the CMS schema grows contact section settings.
 
 insert into public.site_settings (
+  portfolio_id,
   brand_name,
   app_title,
   tagline,
@@ -281,6 +335,7 @@ insert into public.site_settings (
   default_section,
   is_active
 ) values (
+  (select id from public.portfolios where slug = 'ian'),
   'IanOS',
   'personal operating system',
   null,
@@ -295,6 +350,7 @@ insert into public.site_settings (
 );
 
 insert into public.navigation_items (
+  portfolio_id,
   section_id,
   label,
   system_label,
@@ -304,11 +360,11 @@ insert into public.navigation_items (
   is_visible,
   is_active
 ) values
-('profile', 'Profile', 'identity.sys', 'cat /profile/identity.sys', 'user', 1, true, true),
-('about', 'About', 'origin.log', 'tail /logs/origin.log', 'file-text', 2, true, true),
-('capabilities', 'Capabilities', 'capabilities.map', 'open /maps/capabilities.map', 'network', 3, true, true),
-('skills', 'Skills', 'toolchain.bin', 'scan /bin/toolchain.bin', 'cpu', 4, true, true),
-('projects', 'Projects', 'builds/', 'ls /builds/', 'folder-git', 5, true, true),
-('process', 'Process', 'process.pipeline', 'run /pipelines/process.pipeline', 'git-branch', 6, true, true),
-('experience', 'Experience', 'career.log', 'tail -f /logs/career.log', 'briefcase', 7, true, true),
-('contact', 'Contact', 'connect.sh', './connect.sh', 'send', 8, true, true);
+((select id from public.portfolios where slug = 'ian'), 'profile', 'Profile', 'identity.sys', 'cat /profile/identity.sys', 'user', 1, true, true),
+((select id from public.portfolios where slug = 'ian'), 'about', 'About', 'origin.log', 'tail /logs/origin.log', 'file-text', 2, true, true),
+((select id from public.portfolios where slug = 'ian'), 'capabilities', 'Capabilities', 'capabilities.map', 'open /maps/capabilities.map', 'network', 3, true, true),
+((select id from public.portfolios where slug = 'ian'), 'skills', 'Skills', 'toolchain.bin', 'scan /bin/toolchain.bin', 'cpu', 4, true, true),
+((select id from public.portfolios where slug = 'ian'), 'projects', 'Projects', 'builds/', 'ls /builds/', 'folder-git', 5, true, true),
+((select id from public.portfolios where slug = 'ian'), 'process', 'Process', 'process.pipeline', 'run /pipelines/process.pipeline', 'git-branch', 6, true, true),
+((select id from public.portfolios where slug = 'ian'), 'experience', 'Experience', 'career.log', 'tail -f /logs/career.log', 'briefcase', 7, true, true),
+((select id from public.portfolios where slug = 'ian'), 'contact', 'Contact', 'connect.sh', './connect.sh', 'send', 8, true, true);

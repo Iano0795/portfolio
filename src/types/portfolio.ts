@@ -10,6 +10,38 @@ export type SectionId =
 
 export type Section = SectionId;
 
+export type PortfolioRole = 'owner' | 'admin' | 'editor' | 'viewer';
+
+export type PortfolioSlug = string;
+
+export type Portfolio = {
+  id: string;
+  slug: PortfolioSlug;
+  ownerName: string;
+  title: string;
+  appName: string | null;
+  publicUrl: string | null;
+  brandName: string | null;
+  isActive: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type PortfolioMember = {
+  id: string;
+  portfolioId: string;
+  userId: string;
+  email: string;
+  role: PortfolioRole;
+  isActive: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
+export type PortfolioQueryOptions = {
+  portfolioSlug?: PortfolioSlug;
+};
+
 export type NavigationIconName =
   | 'user'
   | 'file-text'
@@ -281,6 +313,7 @@ export type ResumeData = {
 } | null;
 
 export type PortfolioData = {
+  portfolio: Portfolio;
   site: SiteConfig;
   navigation: NavigationData;
   console: ConsoleData;

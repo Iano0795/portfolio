@@ -31,6 +31,7 @@ import type {
   ExperienceData,
   NavigationData,
   PortfolioData,
+  PortfolioQueryOptions,
   ProcessData,
   ProfileData,
   ProjectsData,
@@ -57,46 +58,46 @@ async function withContentSource<T>(scope: string, localGetter: () => Promise<T>
   }
 }
 
-export async function getSiteConfigData(): Promise<SiteConfig> {
-  return withContentSource('site settings', getLocalSiteConfigData, getSupabaseSiteConfigData);
+export async function getSiteConfigData(options?: PortfolioQueryOptions): Promise<SiteConfig> {
+  return withContentSource('site settings', () => getLocalSiteConfigData(options), () => getSupabaseSiteConfigData(options));
 }
 
-export async function getNavigationData(): Promise<NavigationData> {
-  return withContentSource('navigation', getLocalNavigationData, getSupabaseNavigationData);
+export async function getNavigationData(options?: PortfolioQueryOptions): Promise<NavigationData> {
+  return withContentSource('navigation', () => getLocalNavigationData(options), () => getSupabaseNavigationData(options));
 }
 
-export async function getProfileData(): Promise<ProfileData> {
-  return withContentSource('profile', getLocalProfileData, getSupabaseProfileData);
+export async function getProfileData(options?: PortfolioQueryOptions): Promise<ProfileData> {
+  return withContentSource('profile', () => getLocalProfileData(options), () => getSupabaseProfileData(options));
 }
 
-export async function getProjectsData(): Promise<ProjectsData> {
-  return withContentSource('projects', getLocalProjectsData, getSupabaseProjectsData);
+export async function getProjectsData(options?: PortfolioQueryOptions): Promise<ProjectsData> {
+  return withContentSource('projects', () => getLocalProjectsData(options), () => getSupabaseProjectsData(options));
 }
 
-export async function getSkillsData(): Promise<SkillsData> {
-  return withContentSource('skills', getLocalSkillsData, getSupabaseSkillsData);
+export async function getSkillsData(options?: PortfolioQueryOptions): Promise<SkillsData> {
+  return withContentSource('skills', () => getLocalSkillsData(options), () => getSupabaseSkillsData(options));
 }
 
-export async function getExperienceData(): Promise<ExperienceData> {
-  return withContentSource('experience', getLocalExperienceData, getSupabaseExperienceData);
+export async function getExperienceData(options?: PortfolioQueryOptions): Promise<ExperienceData> {
+  return withContentSource('experience', () => getLocalExperienceData(options), () => getSupabaseExperienceData(options));
 }
 
-export async function getCapabilitiesData(): Promise<CapabilitiesData> {
-  return withContentSource('capabilities', getLocalCapabilitiesData, getSupabaseCapabilitiesData);
+export async function getCapabilitiesData(options?: PortfolioQueryOptions): Promise<CapabilitiesData> {
+  return withContentSource('capabilities', () => getLocalCapabilitiesData(options), () => getSupabaseCapabilitiesData(options));
 }
 
-export async function getProcessData(): Promise<ProcessData> {
-  return withContentSource('process', getLocalProcessData, getSupabaseProcessData);
+export async function getProcessData(options?: PortfolioQueryOptions): Promise<ProcessData> {
+  return withContentSource('process', () => getLocalProcessData(options), () => getSupabaseProcessData(options));
 }
 
-export async function getContactData(): Promise<ContactData> {
-  return withContentSource('contact', getLocalContactData, getSupabaseContactData);
+export async function getContactData(options?: PortfolioQueryOptions): Promise<ContactData> {
+  return withContentSource('contact', () => getLocalContactData(options), () => getSupabaseContactData(options));
 }
 
-export async function getResumeData(): Promise<ResumeData> {
-  return withContentSource('resume', getLocalResumeData, getSupabaseResumeData);
+export async function getResumeData(options?: PortfolioQueryOptions): Promise<ResumeData> {
+  return withContentSource('resume', () => getLocalResumeData(options), () => getSupabaseResumeData(options));
 }
 
-export async function getPortfolioData(): Promise<PortfolioData> {
-  return withContentSource('portfolio', getLocalPortfolioData, getSupabasePortfolioData);
+export async function getPortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {
+  return withContentSource('portfolio', () => getLocalPortfolioData(options), () => getSupabasePortfolioData(options));
 }

@@ -19,6 +19,23 @@ export type CurrentAdmin = {
 
 async function getAdminForUser(accessToken: string, user: User): Promise<AdminRecord | null> {
   const supabase = createAdminSupabaseClient(accessToken);
+
+  const { data: portfolioMember, error: portfolioMemberError } = await supabase
+    .from('portfolio_members')
+    .select('id,user_id,email,role,created_at')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle<AdminRecord>();
+
+  if (!portfolioMemberError && portfolioMember) {
+    return portfolioMember;
+  }
+
+  if (!portfolioMemberError) {
+    return null;
+  }
+
   const { data, error } = await supabase
     .from('admins')
     .select('id,user_id,email,role,created_at')
