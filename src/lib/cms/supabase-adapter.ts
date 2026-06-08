@@ -1,4 +1,5 @@
 import { capabilitiesData } from '@/data/capabilities';
+import { commandSuggestions, consoleCommands } from '@/data/commands';
 import { contactData } from '@/data/contact';
 import { experienceData } from '@/data/experience';
 import { navigationItems, quickCommands } from '@/data/navigation';
@@ -30,6 +31,7 @@ import {
 } from '@/lib/cms/queries';
 import type {
   Capability,
+  ConsoleData,
   ContactData,
   ContactLink,
   ExperienceData,
@@ -112,6 +114,13 @@ export async function getSupabaseNavigationData(): Promise<NavigationData> {
   };
 }
 
+export async function getSupabaseConsoleData(): Promise<ConsoleData> {
+  return {
+    suggestions: commandSuggestions,
+    commands: consoleCommands,
+  };
+}
+
 export async function getSupabaseProfileData(): Promise<ProfileData> {
   const profile = await getProfile();
 
@@ -169,10 +178,11 @@ export async function getSupabaseResumeData(): Promise<ResumeData> {
 }
 
 export async function getSupabasePortfolioData(): Promise<PortfolioData> {
-  const [site, navigation, profile, projects, skills, experience, capabilities, process, contact, resume] =
+  const [site, navigation, console, profile, projects, skills, experience, capabilities, process, contact, resume] =
     await Promise.all([
       getSupabaseSiteConfigData(),
       getSupabaseNavigationData(),
+      getSupabaseConsoleData(),
       getSupabaseProfileData(),
       getSupabaseProjectsData(),
       getSupabaseSkillsData(),
@@ -186,6 +196,7 @@ export async function getSupabasePortfolioData(): Promise<PortfolioData> {
   return {
     site,
     navigation,
+    console,
     profile,
     about: aboutData,
     projects,
