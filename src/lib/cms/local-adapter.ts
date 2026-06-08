@@ -1,4 +1,5 @@
 import { capabilitiesData } from '@/data/capabilities';
+import { commandSuggestions, consoleCommands } from '@/data/commands';
 import { contactData } from '@/data/contact';
 import { experienceData } from '@/data/experience';
 import { navigationItems, quickCommands } from '@/data/navigation';
@@ -10,6 +11,7 @@ import { skillsData } from '@/data/skills';
 import type {
   AboutData,
   CapabilitiesData,
+  ConsoleData,
   ContactData,
   ExperienceData,
   NavigationData,
@@ -30,6 +32,13 @@ export async function getLocalNavigationData(): Promise<NavigationData> {
   return {
     items: navigationItems,
     quickCommands,
+  };
+}
+
+export async function getLocalConsoleData(): Promise<ConsoleData> {
+  return {
+    suggestions: commandSuggestions,
+    commands: consoleCommands,
   };
 }
 
@@ -70,10 +79,11 @@ export async function getLocalResumeData(): Promise<ResumeData> {
 }
 
 export async function getLocalPortfolioData(): Promise<PortfolioData> {
-  const [site, navigation, profile, about, projects, skills, experience, capabilities, process, contact, resume] =
+  const [site, navigation, console, profile, about, projects, skills, experience, capabilities, process, contact, resume] =
     await Promise.all([
       getLocalSiteConfigData(),
       getLocalNavigationData(),
+      getLocalConsoleData(),
       getLocalProfileData(),
       getLocalAboutData(),
       getLocalProjectsData(),
@@ -88,6 +98,7 @@ export async function getLocalPortfolioData(): Promise<PortfolioData> {
   return {
     site,
     navigation,
+    console,
     profile,
     about,
     projects,

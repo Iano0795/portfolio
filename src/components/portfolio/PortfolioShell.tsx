@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { commandSuggestions, consoleCommands } from '@/data/commands';
 import type { PortfolioData, QuickCommand, SectionId } from '@/types/portfolio';
 import { AboutSection } from '@/components/sections/AboutSection';
 import { CapabilitiesSection } from '@/components/sections/CapabilitiesSection';
@@ -18,12 +17,12 @@ import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 
 type PortfolioShellProps = {
-  data: PortfolioData;
+  portfolioData: PortfolioData;
 };
 
-export function PortfolioShell({ data }: PortfolioShellProps) {
-  const sections = data.navigation.items;
-  const site = data.site;
+export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
+  const sections = portfolioData.navigation.items;
+  const site = portfolioData.site;
   const [activeSection, setActiveSection] = useState<SectionId>(site.defaultActiveSection);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [booted, setBooted] = useState(false);
@@ -75,7 +74,7 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
 
   const handleConsoleCommand = (rawCommand: string) => {
     const normalizedCommand = rawCommand.trim().toLowerCase().replace(/\s+/g, ' ');
-    const command = consoleCommands.find((item) => item.command === normalizedCommand);
+    const command = portfolioData.console.commands.find((item) => item.command === normalizedCommand);
 
     if (!command) {
       const missingCommandMessage = `command not found: ${rawCommand.trim()}`;
@@ -85,13 +84,13 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
 
     if (command.action === 'showHelp') {
       setConsoleOutput('Available commands loaded.');
-      return [command.output, ...commandSuggestions.map((suggestion) => `- ${suggestion}`)];
+      return [command.output, ...portfolioData.console.suggestions.map((suggestion) => `- ${suggestion}`)];
     }
 
     if (command.action === 'downloadCv') {
-      if (data.resume?.fileUrl) {
-        window.open(data.resume.fileUrl, '_blank', 'noopener,noreferrer');
-        const resumeMessage = `Opening ${data.resume.fileName || 'CV'}...`;
+      if (portfolioData.resume?.fileUrl) {
+        window.open(portfolioData.resume.fileUrl, '_blank', 'noopener,noreferrer');
+        const resumeMessage = `Opening ${portfolioData.resume.fileName || 'CV'}...`;
         setConsoleOutput(resumeMessage);
         return [resumeMessage];
       }
@@ -120,27 +119,27 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
       case 'profile':
         return (
           <ProfileSection
-            data={data.profile}
+            data={portfolioData.profile}
             onNavigate={handleSectionChange}
             onDownloadCv={() => setConsoleOutput(site.messages.cvUnavailable)}
           />
         );
       case 'about':
-        return <AboutSection data={data.about} />;
+        return <AboutSection data={portfolioData.about} />;
       case 'capabilities':
-        return <CapabilitiesSection data={data.capabilities} />;
+        return <CapabilitiesSection data={portfolioData.capabilities} />;
       case 'skills':
-        return <SkillsSection data={data.skills} />;
+        return <SkillsSection data={portfolioData.skills} />;
       case 'projects':
-        return <ProjectsSection data={data.projects} />;
+        return <ProjectsSection data={portfolioData.projects} />;
       case 'process':
-        return <ProcessSection data={data.process} />;
+        return <ProcessSection data={portfolioData.process} />;
       case 'experience':
-        return <ExperienceSection data={data.experience} />;
+        return <ExperienceSection data={portfolioData.experience} />;
       case 'contact':
-        return <ContactSection data={data.contact} />;
+        return <ContactSection data={portfolioData.contact} />;
       default:
-        return <ProfileSection data={data.profile} onNavigate={handleSectionChange} onDownloadCv={() => undefined} />;
+        return <ProfileSection data={portfolioData.profile} onNavigate={handleSectionChange} onDownloadCv={() => undefined} />;
     }
   };
 
@@ -171,7 +170,7 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
         <Sidebar
           activeSection={activeSection}
           booted={booted}
-          quickCommands={data.navigation.quickCommands}
+          quickCommands={portfolioData.navigation.quickCommands}
           sections={sections}
           site={site}
           onQuickCommand={runQuickCommand}
@@ -181,7 +180,7 @@ export function PortfolioShell({ data }: PortfolioShellProps) {
         {mobileMenuOpen && (
           <MobileNavigation
             activeSection={activeSection}
-            quickCommands={data.navigation.quickCommands}
+            quickCommands={portfolioData.navigation.quickCommands}
             sections={sections}
             onQuickCommand={runQuickCommand}
             onSectionChange={handleMobileSectionChange}

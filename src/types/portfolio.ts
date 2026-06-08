@@ -46,6 +46,11 @@ export type ConsoleCommand = {
   output: string;
 };
 
+export type ConsoleData = {
+  suggestions: string[];
+  commands: ConsoleCommand[];
+};
+
 export type NavigationData = {
   items: NavigationItem[];
   quickCommands: QuickCommand[];
@@ -278,6 +283,7 @@ export type ResumeData = {
 export type PortfolioData = {
   site: SiteConfig;
   navigation: NavigationData;
+  console: ConsoleData;
   profile: ProfileData;
   about: AboutData;
   projects: ProjectsData;
