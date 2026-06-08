@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import type { Portfolio, PortfolioMember, PortfolioQueryOptions, PortfolioRole } from '@/types/portfolio';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
@@ -12,8 +13,35 @@ type SupabaseListResponse<T> = {
   error: { message: string } | null;
 };
 
+export const DEFAULT_PORTFOLIO_SLUG = 'ian';
+
+export type CmsPortfolio = {
+  id: string;
+  slug: string;
+  owner_name: string;
+  title: string;
+  app_name: string | null;
+  public_url: string | null;
+  brand_name: string | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type CmsPortfolioMember = {
+  id: string;
+  portfolio_id: string;
+  user_id: string;
+  email: string;
+  role: string | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 export type CmsProfile = {
   id: string;
+  portfolio_id: string;
   name: string | null;
   headline: string | null;
   subheadline: string | null;
@@ -33,6 +61,7 @@ export type CmsProfile = {
 
 export type CmsProject = {
   id: string;
+  portfolio_id: string;
   title: string;
   slug: string;
   category: string | null;
@@ -56,6 +85,7 @@ export type CmsProject = {
 
 export type CmsSkill = {
   id: string;
+  portfolio_id: string;
   name: string;
   category: string;
   level: string | null;
@@ -67,6 +97,7 @@ export type CmsSkill = {
 
 export type CmsExperience = {
   id: string;
+  portfolio_id: string;
   stage_label: string | null;
   title: string;
   organization: string | null;
@@ -81,6 +112,7 @@ export type CmsExperience = {
 
 export type CmsCapability = {
   id: string;
+  portfolio_id: string;
   title: string;
   description: string | null;
   icon: string | null;
@@ -92,6 +124,7 @@ export type CmsCapability = {
 
 export type CmsProcessStep = {
   id: string;
+  portfolio_id: string;
   title: string;
   description: string | null;
   command: string | null;
@@ -104,6 +137,7 @@ export type CmsProcessStep = {
 
 export type CmsContactLink = {
   id: string;
+  portfolio_id: string;
   label: string;
   type: string | null;
   url: string;
@@ -116,6 +150,7 @@ export type CmsContactLink = {
 
 export type CmsSiteSettings = {
   id: string;
+  portfolio_id: string;
   brand_name: string | null;
   app_title: string | null;
   tagline: string | null;
@@ -133,6 +168,7 @@ export type CmsSiteSettings = {
 
 export type CmsNavigationItem = {
   id: string;
+  portfolio_id: string;
   section_id: string;
   label: string;
   system_label: string | null;
@@ -147,6 +183,7 @@ export type CmsNavigationItem = {
 
 export type CmsResumeAsset = {
   id: string;
+  portfolio_id: string;
   file_name: string;
   file_url: string;
   version_label: string | null;
@@ -176,13 +213,93 @@ async function requireList<T>(query: PromiseLike<SupabaseListResponse<T>>): Prom
   return data ?? [];
 }
 
-export async function getProfile(): Promise<CmsProfile | null> {
+function normalizePortfolioSlug(options?: PortfolioQueryOptions) {
+  return options?.portfolioSlug?.trim().toLowerCase() || DEFAULT_PORTFOLIO_SLUG;
+}
+
+function normalizePortfolio(row: CmsPortfolio): Portfolio {
+  return {
+    id: row.id,
+    slug: row.slug,
+    ownerName: row.owner_name,
+    title: row.title,
+    appName: row.app_name,
+    publicUrl: row.public_url,
+    brandName: row.brand_name,
+    isActive: row.is_active ?? true,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function normalizePortfolioMember(row: CmsPortfolioMember): PortfolioMember {
+  return {
+    id: row.id,
+    portfolioId: row.portfolio_id,
+    userId: row.user_id,
+    email: row.email,
+    role: (row.role ?? 'viewer') as PortfolioRole,
+    isActive: row.is_active ?? true,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function getPortfolioBySlug(options?: PortfolioQueryOptions): Promise<Portfolio | null> {
+  const supabase = createServerSupabaseClient();
+
+  const portfolio = await requireMaybeSingle<CmsPortfolio>(
+    supabase
+      .from('portfolios')
+      .select('*')
+      .eq('slug', normalizePortfolioSlug(options))
+      .eq('is_active', true)
+      .maybeSingle(),
+  );
+
+  return portfolio ? normalizePortfolio(portfolio) : null;
+}
+
+async function getPortfolioId(options?: PortfolioQueryOptions) {
+  const portfolio = await getPortfolioBySlug(options);
+
+  return portfolio?.id ?? null;
+}
+
+export async function getPortfolioMembers(options?: PortfolioQueryOptions): Promise<PortfolioMember[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+  const rows = await requireList<CmsPortfolioMember>(
+    supabase
+      .from('portfolio_members')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: true }),
+  );
+
+  return rows.map(normalizePortfolioMember);
+}
+
+export async function getProfile(options?: PortfolioQueryOptions): Promise<CmsProfile | null> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return null;
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireMaybeSingle<CmsProfile>(
     supabase
       .from('profile')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
@@ -190,87 +307,136 @@ export async function getProfile(): Promise<CmsProfile | null> {
   );
 }
 
-export async function getProjects(): Promise<CmsProject[]> {
+export async function getProjects(options?: PortfolioQueryOptions): Promise<CmsProject[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsProject>(
     supabase
       .from('projects')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('order_index', { ascending: true })
       .order('created_at', { ascending: true }),
   );
 }
 
-export async function getSkills(): Promise<CmsSkill[]> {
+export async function getSkills(options?: PortfolioQueryOptions): Promise<CmsSkill[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsSkill>(
     supabase
       .from('skills')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('category', { ascending: true })
       .order('order_index', { ascending: true }),
   );
 }
 
-export async function getExperience(): Promise<CmsExperience[]> {
+export async function getExperience(options?: PortfolioQueryOptions): Promise<CmsExperience[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsExperience>(
     supabase
       .from('experience')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
   );
 }
 
-export async function getCapabilities(): Promise<CmsCapability[]> {
+export async function getCapabilities(options?: PortfolioQueryOptions): Promise<CmsCapability[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsCapability>(
     supabase
       .from('capabilities')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
   );
 }
 
-export async function getProcessSteps(): Promise<CmsProcessStep[]> {
+export async function getProcessSteps(options?: PortfolioQueryOptions): Promise<CmsProcessStep[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsProcessStep>(
     supabase
       .from('process_steps')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
   );
 }
 
-export async function getContactLinks(): Promise<CmsContactLink[]> {
+export async function getContactLinks(options?: PortfolioQueryOptions): Promise<CmsContactLink[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsContactLink>(
     supabase
       .from('contact_links')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
   );
 }
 
-export async function getSiteSettings(): Promise<CmsSiteSettings | null> {
+export async function getSiteSettings(options?: PortfolioQueryOptions): Promise<CmsSiteSettings | null> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return null;
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireMaybeSingle<CmsSiteSettings>(
     supabase
       .from('site_settings')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('updated_at', { ascending: false })
       .limit(1)
@@ -278,26 +444,40 @@ export async function getSiteSettings(): Promise<CmsSiteSettings | null> {
   );
 }
 
-export async function getNavigationItems(): Promise<CmsNavigationItem[]> {
+export async function getNavigationItems(options?: PortfolioQueryOptions): Promise<CmsNavigationItem[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireList<CmsNavigationItem>(
     supabase
       .from('navigation_items')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .eq('is_visible', true)
       .order('order_index', { ascending: true }),
   );
 }
 
-export async function getActiveResume(): Promise<CmsResumeAsset | null> {
+export async function getActiveResume(options?: PortfolioQueryOptions): Promise<CmsResumeAsset | null> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return null;
+  }
+
   const supabase = createServerSupabaseClient();
 
   return requireMaybeSingle<CmsResumeAsset>(
     supabase
       .from('resume_assets')
       .select('*')
+      .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('uploaded_at', { ascending: false })
       .limit(1)

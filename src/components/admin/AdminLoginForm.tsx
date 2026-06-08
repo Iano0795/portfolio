@@ -34,13 +34,15 @@ export function AdminLoginForm({ initialError }: AdminLoginFormProps) {
       return;
     }
 
-    const { data: admin, error: adminError } = await supabase
-      .from('admins')
+    const { data: portfolioMember, error: portfolioMemberError } = await supabase
+      .from('portfolio_members')
       .select('id,user_id,email,role,created_at')
       .eq('user_id', data.user.id)
+      .eq('is_active', true)
+      .limit(1)
       .maybeSingle();
 
-    if (adminError || !admin) {
+    if (portfolioMemberError || !portfolioMember) {
       await supabase.auth.signOut();
       await fetch('/admin/session', { method: 'DELETE' });
       setError(ADMIN_ACCESS_DENIED_MESSAGE);

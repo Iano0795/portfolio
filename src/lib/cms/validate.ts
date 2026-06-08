@@ -10,6 +10,7 @@ import {
   getSiteSettings,
   getSkills,
 } from '@/lib/cms/queries';
+import type { PortfolioQueryOptions } from '@/types/portfolio';
 
 export type CmsValidationResult = {
   profileFound: boolean;
@@ -24,7 +25,7 @@ export type CmsValidationResult = {
   activeResumeFound: boolean;
 };
 
-export async function validateCmsQueries(): Promise<CmsValidationResult> {
+export async function validateCmsQueries(options?: PortfolioQueryOptions): Promise<CmsValidationResult> {
   const [
     profile,
     projects,
@@ -37,16 +38,16 @@ export async function validateCmsQueries(): Promise<CmsValidationResult> {
     navigationItems,
     activeResume,
   ] = await Promise.all([
-    getProfile(),
-    getProjects(),
-    getSkills(),
-    getExperience(),
-    getCapabilities(),
-    getProcessSteps(),
-    getContactLinks(),
-    getSiteSettings(),
-    getNavigationItems(),
-    getActiveResume(),
+    getProfile(options),
+    getProjects(options),
+    getSkills(options),
+    getExperience(options),
+    getCapabilities(options),
+    getProcessSteps(options),
+    getContactLinks(options),
+    getSiteSettings(options),
+    getNavigationItems(options),
+    getActiveResume(options),
   ]);
 
   return {

@@ -14,6 +14,7 @@ import {
   getContactLinks,
   getExperience,
   getNavigationItems,
+  getPortfolioBySlug,
   getProcessSteps,
   getProfile,
   getProjects,
@@ -31,6 +32,7 @@ import {
 } from '@/lib/cms/queries';
 import type {
   Capability,
+  CapabilitiesData,
   ConsoleData,
   ContactData,
   ContactLink,
@@ -40,7 +42,9 @@ import type {
   NavigationData,
   NavigationIconName,
   NavigationItem,
+  Portfolio,
   PortfolioData,
+  PortfolioQueryOptions,
   ProcessData,
   ProcessStep,
   ProfileData,
@@ -99,72 +103,98 @@ function getProfileCoreStack(profile: CmsProfile | null) {
   return isObject(profile?.core_stack) ? profile.core_stack : {};
 }
 
-export async function getSupabaseSiteConfigData(): Promise<SiteConfig> {
-  const settings = await getSiteSettings();
-
-  return normalizeSiteConfig(settings);
+function isDefaultPortfolio(portfolio: Portfolio | null) {
+  return !portfolio || portfolio.slug === 'ian';
 }
 
-export async function getSupabaseNavigationData(): Promise<NavigationData> {
-  const items = await getNavigationItems();
+function requirePortfolio(portfolio: Portfolio | null, options?: PortfolioQueryOptions): Portfolio {
+  if (!portfolio) {
+    throw new Error(`Portfolio "${options?.portfolioSlug ?? 'ian'}" was not found.`);
+  }
+
+  return portfolio;
+}
+
+async function resolvePortfolio(options?: PortfolioQueryOptions) {
+  return requirePortfolio(await getPortfolioBySlug(options), options);
+}
+
+export async function getSupabaseSiteConfigData(options?: PortfolioQueryOptions): Promise<SiteConfig> {
+  const portfolio = await resolvePortfolio(options);
+  const settings = await getSiteSettings(options);
+
+  return normalizeSiteConfig(settings, portfolio);
+}
+
+export async function getSupabaseNavigationData(options?: PortfolioQueryOptions): Promise<NavigationData> {
+  const portfolio = await resolvePortfolio(options);
+  const items = await getNavigationItems(options);
 
   return {
-    items: normalizeNavigationItems(items),
+    items: normalizeNavigationItems(items, portfolio),
     quickCommands,
   };
 }
 
-export async function getSupabaseConsoleData(): Promise<ConsoleData> {
+export async function getSupabaseConsoleData(_options?: PortfolioQueryOptions): Promise<ConsoleData> {
   return {
     suggestions: commandSuggestions,
     commands: consoleCommands,
   };
 }
 
-export async function getSupabaseProfileData(): Promise<ProfileData> {
-  const profile = await getProfile();
+export async function getSupabaseProfileData(options?: PortfolioQueryOptions): Promise<ProfileData> {
+  const portfolio = await resolvePortfolio(options);
+  const profile = await getProfile(options);
 
-  return normalizeProfileData(profile);
+  return normalizeProfileData(profile, portfolio);
 }
 
-export async function getSupabaseProjectsData(): Promise<ProjectsData> {
-  const projects = await getProjects();
+export async function getSupabaseProjectsData(options?: PortfolioQueryOptions): Promise<ProjectsData> {
+  const portfolio = await resolvePortfolio(options);
+  const projects = await getProjects(options);
 
-  return normalizeProjectsData(projects);
+  return normalizeProjectsData(projects, portfolio);
 }
 
-export async function getSupabaseSkillsData(): Promise<SkillsData> {
-  const skills = await getSkills();
+export async function getSupabaseSkillsData(options?: PortfolioQueryOptions): Promise<SkillsData> {
+  const portfolio = await resolvePortfolio(options);
+  const skills = await getSkills(options);
 
-  return normalizeSkillsData(skills);
+  return normalizeSkillsData(skills, portfolio);
 }
 
-export async function getSupabaseExperienceData(): Promise<ExperienceData> {
-  const entries = await getExperience();
+export async function getSupabaseExperienceData(options?: PortfolioQueryOptions): Promise<ExperienceData> {
+  const portfolio = await resolvePortfolio(options);
+  const entries = await getExperience(options);
 
-  return normalizeExperienceData(entries);
+  return normalizeExperienceData(entries, portfolio);
 }
 
-export async function getSupabaseCapabilitiesData(): Promise<typeof capabilitiesData> {
-  const capabilities = await getCapabilities();
+export async function getSupabaseCapabilitiesData(options?: PortfolioQueryOptions): Promise<CapabilitiesData> {
+  const portfolio = await resolvePortfolio(options);
+  const capabilities = await getCapabilities(options);
 
-  return normalizeCapabilitiesData(capabilities);
+  return normalizeCapabilitiesData(capabilities, portfolio);
 }
 
-export async function getSupabaseProcessData(): Promise<ProcessData> {
-  const steps = await getProcessSteps();
+export async function getSupabaseProcessData(options?: PortfolioQueryOptions): Promise<ProcessData> {
+  const portfolio = await resolvePortfolio(options);
+  const steps = await getProcessSteps(options);
 
-  return normalizeProcessData(steps);
+  return normalizeProcessData(steps, portfolio);
 }
 
-export async function getSupabaseContactData(): Promise<ContactData> {
-  const links = await getContactLinks();
+export async function getSupabaseContactData(options?: PortfolioQueryOptions): Promise<ContactData> {
+  const portfolio = await resolvePortfolio(options);
+  const links = await getContactLinks(options);
 
-  return normalizeContactData(links);
+  return normalizeContactData(links, portfolio);
 }
 
-export async function getSupabaseResumeData(): Promise<ResumeData> {
-  const resume = await getActiveResume();
+export async function getSupabaseResumeData(options?: PortfolioQueryOptions): Promise<ResumeData> {
+  await resolvePortfolio(options);
+  const resume = await getActiveResume(options);
 
   if (!resume) {
     return null;
@@ -177,23 +207,25 @@ export async function getSupabaseResumeData(): Promise<ResumeData> {
   };
 }
 
-export async function getSupabasePortfolioData(): Promise<PortfolioData> {
+export async function getSupabasePortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {
+  const portfolio = await resolvePortfolio(options);
   const [site, navigation, console, profile, projects, skills, experience, capabilities, process, contact, resume] =
     await Promise.all([
-      getSupabaseSiteConfigData(),
-      getSupabaseNavigationData(),
-      getSupabaseConsoleData(),
-      getSupabaseProfileData(),
-      getSupabaseProjectsData(),
-      getSupabaseSkillsData(),
-      getSupabaseExperienceData(),
-      getSupabaseCapabilitiesData(),
-      getSupabaseProcessData(),
-      getSupabaseContactData(),
-      getSupabaseResumeData(),
+      getSupabaseSiteConfigData(options),
+      getSupabaseNavigationData(options),
+      getSupabaseConsoleData(options),
+      getSupabaseProfileData(options),
+      getSupabaseProjectsData(options),
+      getSupabaseSkillsData(options),
+      getSupabaseExperienceData(options),
+      getSupabaseCapabilitiesData(options),
+      getSupabaseProcessData(options),
+      getSupabaseContactData(options),
+      getSupabaseResumeData(options),
     ]);
 
   return {
+    portfolio,
     site,
     navigation,
     console,
@@ -209,8 +241,21 @@ export async function getSupabasePortfolioData(): Promise<PortfolioData> {
   };
 }
 
-function normalizeSiteConfig(settings: CmsSiteSettings | null): SiteConfig {
+function normalizeSiteConfig(settings: CmsSiteSettings | null, portfolio: Portfolio | null): SiteConfig {
   if (!settings) {
+    if (!isDefaultPortfolio(portfolio)) {
+      return {
+        ...siteConfig,
+        brandName: portfolio?.brandName ?? portfolio?.ownerName ?? siteConfig.brandName,
+        appTitle: portfolio?.title ?? siteConfig.appTitle,
+        initialConsoleOutput: `${portfolio?.brandName ?? portfolio?.ownerName ?? 'Portfolio'} content pending. CMS portfolio shell ready.`,
+        commandPrompt: {
+          ...siteConfig.commandPrompt,
+          userHost: `${portfolio?.slug ?? 'portfolio'}@${portfolio?.brandName ?? portfolio?.ownerName ?? 'CMS'}`,
+        },
+      };
+    }
+
     return siteConfig;
   }
 
@@ -236,9 +281,9 @@ function normalizeSiteConfig(settings: CmsSiteSettings | null): SiteConfig {
   };
 }
 
-function normalizeNavigationItems(items: CmsNavigationItem[]): NavigationItem[] {
+function normalizeNavigationItems(items: CmsNavigationItem[], portfolio: Portfolio | null): NavigationItem[] {
   if (items.length === 0) {
-    return navigationItems;
+    return isDefaultPortfolio(portfolio) ? navigationItems : [];
   }
 
   return items.flatMap((item) => {
@@ -263,8 +308,24 @@ function normalizeNavigationItems(items: CmsNavigationItem[]): NavigationItem[] 
   });
 }
 
-function normalizeProfileData(profile: CmsProfile | null): ProfileData {
+function normalizeProfileData(profile: CmsProfile | null, portfolio: Portfolio | null): ProfileData {
   if (!profile) {
+    if (!isDefaultPortfolio(portfolio)) {
+      return {
+        ...profileData,
+        eyebrow: 'portfolio.content / pending',
+        headline: `${portfolio?.ownerName ?? 'Portfolio'} content pending`,
+        subheadline: 'This portfolio exists in the shared CMS foundation. Public content has not been seeded yet.',
+        identityRows: [
+          { label: 'NAME', value: portfolio?.ownerName ?? 'Pending' },
+          { label: 'ROLE', value: 'Pending' },
+          { label: 'MODE', value: 'CMS Foundation' },
+          { label: 'FOCUS', value: 'Portfolio setup' },
+        ],
+        nowBuilding: ['Portfolio content model', 'Owner-scoped CMS access'],
+      };
+    }
+
     return profileData;
   }
 
@@ -287,9 +348,14 @@ function normalizeProfileData(profile: CmsProfile | null): ProfileData {
   };
 }
 
-function normalizeProjectsData(rows: CmsProject[]): ProjectsData {
+function normalizeProjectsData(rows: CmsProject[], portfolio: Portfolio | null): ProjectsData {
   if (rows.length === 0) {
-    return projectsData;
+    return isDefaultPortfolio(portfolio)
+      ? projectsData
+      : {
+          ...projectsData,
+          projects: [],
+        };
   }
 
   const projects = rows.map((row): Project => {
@@ -317,9 +383,14 @@ function normalizeProjectsData(rows: CmsProject[]): ProjectsData {
   };
 }
 
-function normalizeSkillsData(rows: CmsSkill[]): SkillsData {
+function normalizeSkillsData(rows: CmsSkill[], portfolio: Portfolio | null): SkillsData {
   if (rows.length === 0) {
-    return skillsData;
+    return isDefaultPortfolio(portfolio)
+      ? skillsData
+      : {
+          ...skillsData,
+          groups: [],
+        };
   }
 
   const groups = skillsData.groups.map((group): SkillGroup => {
@@ -362,9 +433,14 @@ function normalizeSkillsData(rows: CmsSkill[]): SkillsData {
   };
 }
 
-function normalizeExperienceData(rows: CmsExperience[]): ExperienceData {
+function normalizeExperienceData(rows: CmsExperience[], portfolio: Portfolio | null): ExperienceData {
   if (rows.length === 0) {
-    return experienceData;
+    return isDefaultPortfolio(portfolio)
+      ? experienceData
+      : {
+          ...experienceData,
+          entries: [],
+        };
   }
 
   const entries = rows.map((row): ExperienceEntry => {
@@ -386,9 +462,14 @@ function normalizeExperienceData(rows: CmsExperience[]): ExperienceData {
   };
 }
 
-function normalizeCapabilitiesData(rows: CmsCapability[]): typeof capabilitiesData {
+function normalizeCapabilitiesData(rows: CmsCapability[], portfolio: Portfolio | null): CapabilitiesData {
   if (rows.length === 0) {
-    return capabilitiesData;
+    return isDefaultPortfolio(portfolio)
+      ? capabilitiesData
+      : {
+          ...capabilitiesData,
+          items: [],
+        };
   }
 
   const items = rows.map((row): Capability => {
@@ -408,9 +489,14 @@ function normalizeCapabilitiesData(rows: CmsCapability[]): typeof capabilitiesDa
   };
 }
 
-function normalizeProcessData(rows: CmsProcessStep[]): ProcessData {
+function normalizeProcessData(rows: CmsProcessStep[], portfolio: Portfolio | null): ProcessData {
   if (rows.length === 0) {
-    return processData;
+    return isDefaultPortfolio(portfolio)
+      ? processData
+      : {
+          ...processData,
+          stages: [],
+        };
   }
 
   const stages = rows.map((row): ProcessStep => ({
@@ -424,9 +510,16 @@ function normalizeProcessData(rows: CmsProcessStep[]): ProcessData {
   };
 }
 
-function normalizeContactData(rows: CmsContactLink[]): ContactData {
+function normalizeContactData(rows: CmsContactLink[], portfolio: Portfolio | null): ContactData {
   if (rows.length === 0) {
-    return contactData;
+    return isDefaultPortfolio(portfolio)
+      ? contactData
+      : {
+          ...contactData,
+          availability: [],
+          collaborationSignals: [],
+          links: [],
+        };
   }
 
   const links = rows.map((row): ContactLink => {
