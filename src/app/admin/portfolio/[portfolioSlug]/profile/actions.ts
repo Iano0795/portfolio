@@ -120,7 +120,7 @@ export async function saveProfileAction(portfolioSlug: string, _state: ProfileEd
 
     const access = await requirePortfolioManager(portfolioSlug);
     const input = getProfileInput(formData);
-    const supabase = createAdminSupabaseClient(tokens.accessToken);
+    const supabase = await createAdminSupabaseClient(tokens.accessToken);
     const payload = {
       portfolio_id: access.portfolio.id,
       name: input.name,

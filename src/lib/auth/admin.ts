@@ -18,7 +18,7 @@ export type CurrentAdmin = {
 };
 
 async function getAdminForUser(accessToken: string, user: User): Promise<AdminRecord | null> {
-  const supabase = createAdminSupabaseClient(accessToken);
+  const supabase = await createAdminSupabaseClient(accessToken);
 
   const { data: portfolioMember, error: portfolioMemberError } = await supabase
     .from('portfolio_members')
@@ -60,7 +60,7 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
 }
 
 export async function getAdminFromAccessToken(accessToken: string): Promise<CurrentAdmin | null> {
-  const supabase = createAdminSupabaseClient(accessToken);
+  const supabase = await createAdminSupabaseClient(accessToken);
   const { data, error } = await supabase.auth.getUser(accessToken);
 
   if (error || !data.user) {

@@ -68,7 +68,7 @@ async function getMutationContext(portfolioSlug: string) {
   }
 
   const access = await requirePortfolioManager(portfolioSlug);
-  const supabase = createAdminSupabaseClient(tokens.accessToken);
+  const supabase = await createAdminSupabaseClient(tokens.accessToken);
 
   return { access, supabase };
 }
@@ -79,7 +79,7 @@ function revalidateSkills(portfolioSlug: string) {
 }
 
 async function ensureSkillBelongsToPortfolio(
-  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
   portfolioId: string,
   skillId: string,
 ) {
@@ -100,7 +100,7 @@ async function ensureSkillBelongsToPortfolio(
 }
 
 async function getNextOrderIndex(
-  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
   portfolioId: string,
   category: string,
 ) {
