@@ -22,8 +22,8 @@ const sidebarItems = [
   { id: 'skills', label: 'Skills', module: 'skills.matrix', icon: Cpu, href: '/skills' },
   { id: 'experience', label: 'Experience', module: 'career.timeline', icon: Briefcase, href: '/experience' },
   { id: 'contact', label: 'Contact', module: 'contact.links', icon: Contact, href: '/contact' },
-  { label: 'Capabilities', module: 'capabilities.map', icon: Network },
-  { label: 'Process', module: 'process.pipeline', icon: Route },
+  { id: 'capabilities', label: 'Capabilities', module: 'capabilities.map', icon: Network, href: '/capabilities' },
+  { id: 'process', label: 'Process', module: 'process.pipeline', icon: Route, href: '/process' },
   { id: 'resume', label: 'Resume', module: 'resume.asset', icon: FileText, href: '/resume' },
   { label: 'Navigation', module: 'nav.registry', icon: Map },
   { label: 'Theme', module: 'theme.tokens', icon: Palette },
@@ -32,7 +32,7 @@ const sidebarItems = [
 ];
 
 type AdminSidebarProps = {
-  activeItem: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact' | 'resume';
+  activeItem: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact' | 'capabilities' | 'process' | 'resume';
   portfolioSlug: string;
 };
 
