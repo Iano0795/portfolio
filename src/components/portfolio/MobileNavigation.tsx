@@ -1,10 +1,12 @@
-import { Briefcase, Cpu, FileText, FolderGit2, GitBranch, Network, Send, UserRound, type LucideIcon } from 'lucide-react';
+import { Award, Briefcase, Cpu, FileText, FolderGit2, GitBranch, Network, Send, Shield, UserRound, type LucideIcon } from 'lucide-react';
 import type { NavigationItem, QuickCommand, SectionId } from '@/types/portfolio';
 
 const navigationIcons: Record<NavigationItem['icon'], LucideIcon> = {
   user: UserRound,
   'file-text': FileText,
   network: Network,
+  shield: Shield,
+  award: Award,
   cpu: Cpu,
   'folder-git': FolderGit2,
   'git-branch': GitBranch,

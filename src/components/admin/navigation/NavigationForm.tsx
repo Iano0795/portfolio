@@ -20,6 +20,7 @@ const SUPPORTED_SECTIONS = [
   { value: 'capabilities', label: 'Capabilities' },
   { value: 'skills', label: 'Skills' },
   { value: 'projects', label: 'Projects' },
+  { value: 'credentials', label: 'Credentials' },
   { value: 'process', label: 'Process' },
   { value: 'experience', label: 'Experience' },
   { value: 'contact', label: 'Contact' },

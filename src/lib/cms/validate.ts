@@ -2,6 +2,7 @@ import {
   getActiveResume,
   getCapabilities,
   getContactLinks,
+  getCredentials,
   getExperience,
   getNavigationItems,
   getProcessSteps,
@@ -20,6 +21,7 @@ export type CmsValidationResult = {
   capabilityCount: number;
   processStepCount: number;
   contactLinkCount: number;
+  credentialCount: number;
   siteSettingsFound: boolean;
   navigationItemCount: number;
   activeResumeFound: boolean;
@@ -34,6 +36,7 @@ export async function validateCmsQueries(options?: PortfolioQueryOptions): Promi
     capabilities,
     processSteps,
     contactLinks,
+    credentials,
     siteSettings,
     navigationItems,
     activeResume,
@@ -45,6 +48,7 @@ export async function validateCmsQueries(options?: PortfolioQueryOptions): Promi
     getCapabilities(options),
     getProcessSteps(options),
     getContactLinks(options),
+    getCredentials(options),
     getSiteSettings(options),
     getNavigationItems(options),
     getActiveResume(options),
@@ -58,6 +62,7 @@ export async function validateCmsQueries(options?: PortfolioQueryOptions): Promi
     capabilityCount: capabilities.length,
     processStepCount: processSteps.length,
     contactLinkCount: contactLinks.length,
+    credentialCount: credentials.length,
     siteSettingsFound: Boolean(siteSettings),
     navigationItemCount: navigationItems.length,
     activeResumeFound: Boolean(activeResume),

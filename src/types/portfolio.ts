@@ -4,6 +4,7 @@ export type SectionId =
   | 'capabilities'
   | 'skills'
   | 'projects'
+  | 'credentials'
   | 'process'
   | 'experience'
   | 'contact';
@@ -46,6 +47,8 @@ export type NavigationIconName =
   | 'user'
   | 'file-text'
   | 'network'
+  | 'shield'
+  | 'award'
   | 'cpu'
   | 'folder-git'
   | 'git-branch'
@@ -331,6 +334,25 @@ export type ResumeData = {
   versionLabel: string;
 } | null;
 
+export type Credential = {
+  id: string;
+  portfolio_id?: string;
+  title: string;
+  issuer?: string | null;
+  credential_type?: string | null;
+  category?: string | null;
+  description?: string | null;
+  issued_at?: string | null;
+  expires_at?: string | null;
+  credential_id?: string | null;
+  credential_url?: string | null;
+  image_url?: string | null;
+  skills: string[];
+  order_index: number;
+  is_featured: boolean;
+  is_active: boolean;
+};
+
 export type PortfolioData = {
   portfolio: Portfolio;
   site: SiteConfig;
@@ -345,4 +367,5 @@ export type PortfolioData = {
   process: ProcessData;
   contact: ContactData;
   resume: ResumeData;
+  credentials: Credential[];
 };

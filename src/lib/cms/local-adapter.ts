@@ -13,6 +13,7 @@ import type {
   CapabilitiesData,
   ConsoleData,
   ContactData,
+  Credential,
   ExperienceData,
   NavigationData,
   Portfolio,
@@ -210,8 +211,12 @@ export async function getLocalResumeData(_options?: PortfolioQueryOptions): Prom
   return null;
 }
 
+export async function getLocalCredentialsData(_options?: PortfolioQueryOptions): Promise<Credential[]> {
+  return [];
+}
+
 export async function getLocalPortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {
-  const [portfolio, site, navigation, console, profile, about, projects, skills, experience, capabilities, process, contact, resume] =
+  const [portfolio, site, navigation, console, profile, about, projects, skills, experience, capabilities, process, contact, resume, credentials] =
     await Promise.all([
       getLocalPortfolio(options),
       getLocalSiteConfigData(options),
@@ -226,6 +231,7 @@ export async function getLocalPortfolioData(options?: PortfolioQueryOptions): Pr
       getLocalProcessData(options),
       getLocalContactData(options),
       getLocalResumeData(options),
+      getLocalCredentialsData(options),
     ]);
 
   return {
@@ -242,5 +248,6 @@ export async function getLocalPortfolioData(options?: PortfolioQueryOptions): Pr
     process,
     contact,
     resume,
+    credentials,
   };
 }

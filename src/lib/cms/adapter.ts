@@ -2,6 +2,7 @@ import { getContentSource } from '@/lib/cms/content-source';
 import {
   getLocalCapabilitiesData,
   getLocalContactData,
+  getLocalCredentialsData,
   getLocalExperienceData,
   getLocalNavigationData,
   getLocalPortfolioData,
@@ -15,6 +16,7 @@ import {
 import {
   getSupabaseCapabilitiesData,
   getSupabaseContactData,
+  getSupabaseCredentialsData,
   getSupabaseExperienceData,
   getSupabaseNavigationData,
   getSupabasePortfolioData,
@@ -28,6 +30,7 @@ import {
 import type {
   CapabilitiesData,
   ContactData,
+  Credential,
   ExperienceData,
   NavigationData,
   PortfolioData,
@@ -96,6 +99,10 @@ export async function getContactData(options?: PortfolioQueryOptions): Promise<C
 
 export async function getResumeData(options?: PortfolioQueryOptions): Promise<ResumeData> {
   return withContentSource('resume', () => getLocalResumeData(options), () => getSupabaseResumeData(options));
+}
+
+export async function getCredentialsData(options?: PortfolioQueryOptions): Promise<Credential[]> {
+  return withContentSource('credentials', () => getLocalCredentialsData(options), () => getSupabaseCredentialsData(options));
 }
 
 export async function getPortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {

@@ -10,6 +10,7 @@ type AdminShellProps = {
     | 'dashboard'
     | 'profile'
     | 'projects'
+    | 'credentials'
     | 'skills'
     | 'experience'
     | 'contact'

@@ -43,6 +43,7 @@ supabase/seeds/violet_portfolio_seed.sql
 - `skills`
 - `experience`
 - `capabilities`
+- `credentials`
 - `contact_links`
 - `resume_assets`
 - `site_settings`
@@ -60,10 +61,32 @@ select id from public.portfolios where slug = 'violet'
 
 All delete/reinsert operations are scoped to that resolved `portfolio_id`. The seed does not delete or update Ian's scoped content and does not insert or update `portfolio_members`.
 
+## Credentials / Certifications
+
+The shared CMS now includes `public.credentials`. Violet's certifications were extracted from
+`../violets_portfolio/src/data/portfolio.ts` and seeded into `public.credentials`.
+
+Seeded records:
+
+- Bachelor's Degree in Mathematics and Computer Science
+- CCNA / Networking Fundamentals
+- Cybersecurity Labs & SOC Foundations
+- SOC Analyst & Incident Response Preparation
+
+The reference uses textual periods/statuses such as `2021 - 2025`, `In Progress`, and `Ongoing`.
+Those are not exact dates, so `issued_at` and `expires_at` are left null rather than guessed.
+No credential verification URLs or credential images were present in the reference content.
+
+The Certifications navigation item is now seeded into `public.navigation_items` with:
+
+```text
+section_id = credentials
+label = Certifications
+command = open certifications
+```
+
 ## Missing Or Deferred Content
 
-- Credentials/certifications exist in the reference project, but the current shared CMS does not have a credentials table. They were not forced into another table.
-- The reference navigation includes `Certifications`, but `certifications` is not a supported public section ID yet. It was not seeded into `navigation_items`.
 - No dedicated process/workflow section exists in the reference portfolio, so no `process_steps` were seeded.
 - No project case study/writeup URLs were present in the reference content.
 - No project image URLs were present in the reference content.
@@ -125,13 +148,32 @@ from public.skills skills
 join public.portfolios p on p.id = skills.portfolio_id
 where p.slug = 'violet'
 group by p.slug;
+
+select
+  p.slug,
+  count(*) as credentials_count
+from public.credentials c
+join public.portfolios p on p.id = c.portfolio_id
+where p.slug = 'violet'
+group by p.slug;
+
+select
+  p.slug,
+  c.title,
+  c.issuer,
+  c.credential_type,
+  c.is_active
+from public.credentials c
+join public.portfolios p on p.id = c.portfolio_id
+where p.slug = 'violet'
+order by c.order_index;
 ```
 
 ## Manual Checklist
 
 1. Run `supabase/seeds/violet_portfolio_seed.sql` in the Supabase SQL Editor.
 2. Confirm `public.portfolios.slug = 'violet'` exists.
-3. Confirm Violet profile, skills, projects/labs, contact links, resume asset, settings, theme, capabilities, and navigation exist.
+3. Confirm Violet profile, skills, projects/labs, credentials, contact links, resume asset, settings, theme, capabilities, and navigation exist.
 4. Confirm Ian's rows are unchanged.
 5. Login as Violet and open `/admin/portfolio/violet`.
 6. Confirm Violet data appears in the managers.

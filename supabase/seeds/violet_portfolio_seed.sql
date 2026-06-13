@@ -81,6 +81,15 @@ delete from public.capabilities
 using violet_portfolio
 where public.capabilities.portfolio_id = violet_portfolio.id;
 
+with violet_portfolio as (
+  select id
+  from public.portfolios
+  where slug = 'violet'
+)
+delete from public.credentials
+using violet_portfolio
+where public.credentials.portfolio_id = violet_portfolio.id;
+
 -- No Violet-specific workflow/process section exists in the reference project.
 -- Keep this table clear for Violet until a real process is authored.
 with violet_portfolio as (
@@ -476,6 +485,100 @@ cross join (
     ('Clear Documentation', 'Values accurate notes, concise reporting, and evidence-based communication.', 'file-text', 3)
 ) as capability (title, description, icon, order_index);
 
+-- Source credential periods/statuses are textual ("2021 - 2025", "Ongoing", "Learning Path").
+-- Date fields are left null rather than inventing exact issue/expiry dates.
+with violet_portfolio as (
+  select id
+  from public.portfolios
+  where slug = 'violet'
+)
+insert into public.credentials (
+  portfolio_id,
+  title,
+  issuer,
+  credential_type,
+  category,
+  description,
+  issued_at,
+  expires_at,
+  credential_id,
+  credential_url,
+  image_url,
+  skills,
+  order_index,
+  is_featured,
+  is_active
+)
+select
+  violet_portfolio.id,
+  credential.title,
+  credential.issuer,
+  credential.credential_type,
+  credential.category,
+  credential.description,
+  null,
+  null,
+  null,
+  null,
+  null,
+  credential.skills::jsonb,
+  credential.order_index,
+  credential.is_featured,
+  true
+from violet_portfolio
+cross join (
+  values
+    (
+      'Bachelor''s Degree in Mathematics and Computer Science',
+      'Kirinyaga University',
+      'Education',
+      'Completed / Awaiting Graduation',
+      'Built a strong foundation in programming, systems thinking, mathematics, databases, and computer science fundamentals.',
+      '["Programming fundamentals", "Computer science foundations", "Mathematics and analytical thinking", "Databases and systems concepts"]',
+      0,
+      true
+    ),
+    (
+      'CCNA / Networking Fundamentals',
+      'Cisco Networking Academy',
+      'Certification / Training',
+      'Learning Path',
+      'Developing networking fundamentals relevant to SOC analysis, network security, and infrastructure monitoring.',
+      '["TCP/IP", "Routing and switching basics", "Subnetting", "Network troubleshooting", "Security fundamentals"]',
+      1,
+      false
+    ),
+    (
+      'Cybersecurity Labs & SOC Foundations',
+      'TryHackMe',
+      'Practical Labs',
+      'Hands-on Practice',
+      'Completing practical cybersecurity labs focused on enumeration, Linux, network scanning, security tools, and beginner SOC concepts.',
+      '["Pre-Security", "Linux fundamentals", "Nmap", "Web security basics", "Defensive security concepts"]',
+      2,
+      false
+    ),
+    (
+      'SOC Analyst & Incident Response Preparation',
+      'Cybersecurity Self-Study',
+      'Learning Track',
+      'Active Development',
+      'Structured self-study focused on SOC monitoring, phishing analysis, alert triage, incident response, and vulnerability assessment.',
+      '["SIEM concepts", "Alert triage", "Phishing analysis", "Incident response lifecycle", "Vulnerability assessment"]',
+      3,
+      false
+    )
+) as credential (
+  title,
+  issuer,
+  credential_type,
+  category,
+  description,
+  skills,
+  order_index,
+  is_featured
+);
+
 with violet_portfolio as (
   select id
   from public.portfolios
@@ -628,7 +731,8 @@ cross join (
     ('skills', 'Skills', 'skills', 'scan /skills', 'shield', 2),
     ('experience', 'Experience', 'experience', 'tail /experience', 'briefcase', 3),
     ('projects', 'Projects', 'security-labs', 'open /projects', 'folder-git', 4),
-    ('contact', 'Contact', 'contact', 'open /contact', 'mail', 5)
+    ('credentials', 'Certifications', 'certifications', 'open certifications', 'award', 5),
+    ('contact', 'Contact', 'contact', 'open /contact', 'mail', 6)
 ) as item (section_id, label, system_label, command, icon, order_index);
 
 -- Verification queries:
@@ -653,5 +757,17 @@ cross join (
 -- join public.portfolios p on p.id = skills.portfolio_id
 -- where p.slug = 'violet'
 -- group by p.slug;
+--
+-- select p.slug, count(*) as credentials_count
+-- from public.credentials c
+-- join public.portfolios p on p.id = c.portfolio_id
+-- where p.slug = 'violet'
+-- group by p.slug;
+--
+-- select p.slug, c.title, c.issuer, c.credential_type, c.is_active
+-- from public.credentials c
+-- join public.portfolios p on p.id = c.portfolio_id
+-- where p.slug = 'violet'
+-- order by c.order_index;
 
 commit;

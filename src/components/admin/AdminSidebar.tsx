@@ -2,6 +2,7 @@ import {
   Briefcase,
   Contact,
   Cpu,
+  Award,
   FileText,
   FolderGit2,
   Gauge,
@@ -19,6 +20,7 @@ const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', module: 'control.index', icon: Gauge, href: '' },
   { id: 'profile', label: 'Profile', module: 'profile.editor', icon: UserRound, href: '/profile' },
   { id: 'projects', label: 'Projects', module: 'projects.editor', icon: FolderGit2, href: '/projects' },
+  { id: 'credentials', label: 'Credentials', module: 'credentials.vault', icon: Award, href: '/credentials' },
   { id: 'skills', label: 'Skills', module: 'skills.matrix', icon: Cpu, href: '/skills' },
   { id: 'experience', label: 'Experience', module: 'career.timeline', icon: Briefcase, href: '/experience' },
   { id: 'contact', label: 'Contact', module: 'contact.links', icon: Contact, href: '/contact' },
@@ -36,6 +38,7 @@ type AdminSidebarProps = {
     | 'dashboard'
     | 'profile'
     | 'projects'
+    | 'credentials'
     | 'skills'
     | 'experience'
     | 'contact'

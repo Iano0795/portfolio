@@ -148,6 +148,27 @@ export type CmsContactLink = {
   updated_at: string | null;
 };
 
+export type CmsCredential = {
+  id: string;
+  portfolio_id: string;
+  title: string;
+  issuer: string | null;
+  credential_type: string | null;
+  category: string | null;
+  description: string | null;
+  issued_at: string | null;
+  expires_at: string | null;
+  credential_id: string | null;
+  credential_url: string | null;
+  image_url: string | null;
+  skills: JsonValue;
+  order_index: number | null;
+  is_featured: boolean | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 export type CmsSiteSettings = {
   id: string;
   portfolio_id: string;
@@ -433,6 +454,26 @@ export async function getContactLinks(options?: PortfolioQueryOptions): Promise<
       .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .order('order_index', { ascending: true }),
+  );
+}
+
+export async function getCredentials(options?: PortfolioQueryOptions): Promise<CmsCredential[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireList<CmsCredential>(
+    supabase
+      .from('credentials')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .eq('is_active', true)
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true }),
   );
 }
 
