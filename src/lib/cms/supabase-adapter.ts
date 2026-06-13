@@ -8,6 +8,7 @@ import { aboutData, profileData } from '@/data/profile';
 import { projectsData } from '@/data/projects';
 import { siteConfig } from '@/data/site';
 import { skillsData } from '@/data/skills';
+import { normalizeThemeConfig } from '@/lib/theme';
 import {
   getActiveResume,
   getCapabilities,
@@ -257,6 +258,7 @@ function normalizeSiteConfig(settings: CmsSiteSettings | null, portfolio: Portfo
         ...siteConfig.commandPrompt,
         userHost: portfolio ? `${portfolio.slug}@${portfolioBrandName}` : siteConfig.commandPrompt.userHost,
       },
+      theme: siteConfig.theme,
     };
   }
 
@@ -279,6 +281,21 @@ function normalizeSiteConfig(settings: CmsSiteSettings | null, portfolio: Portfo
       availability: normalizeString(settings.availability_label, siteConfig.statusBar.availability),
     },
     initialConsoleOutput: normalizeString(settings.footer_text, siteConfig.initialConsoleOutput),
+    theme: normalizeThemeConfig({
+      presetName: settings.theme_preset ?? undefined,
+      primary: settings.theme_primary ?? undefined,
+      secondary: settings.theme_secondary ?? undefined,
+      background: settings.theme_background ?? undefined,
+      panel: settings.theme_panel ?? undefined,
+      foreground: settings.theme_foreground ?? undefined,
+      muted: settings.theme_muted ?? undefined,
+      border: settings.theme_border ?? undefined,
+      glowIntensity: settings.theme_glow_intensity ?? undefined,
+      scanlinesEnabled: settings.theme_scanlines_enabled ?? undefined,
+      animationIntensity: settings.theme_animation_intensity ?? undefined,
+      fontMode: settings.theme_font_mode ?? undefined,
+      isActive: settings.theme_is_active ?? undefined,
+    }),
   };
 }
 

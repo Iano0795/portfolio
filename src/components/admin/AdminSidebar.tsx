@@ -27,7 +27,7 @@ const sidebarItems = [
   { id: 'resume', label: 'Resume', module: 'resume.asset', icon: FileText, href: '/resume' },
   { id: 'navigation', label: 'Navigation', module: 'nav.registry', icon: Map, href: '/navigation' },
   { id: 'settings', label: 'Settings', module: 'system.settings', icon: Settings, href: '/settings' },
-  { label: 'Theme', module: 'theme.tokens', icon: Palette },
+  { id: 'theme', label: 'Theme', module: 'theme.tokens', icon: Palette, href: '/theme' },
   { label: 'Media Library', module: 'media.vault', icon: Image },
 ];
 
@@ -43,7 +43,8 @@ type AdminSidebarProps = {
     | 'process'
     | 'resume'
     | 'navigation'
-    | 'settings';
+    | 'settings'
+    | 'theme';
   portfolioSlug: string;
 };
 

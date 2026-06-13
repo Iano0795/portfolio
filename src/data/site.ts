@@ -1,10 +1,12 @@
 import type { SiteConfig } from '@/types/portfolio';
+import { DEFAULT_THEME_CONFIG } from '@/lib/theme';
 
 export const siteConfig: SiteConfig = {
   brandName: 'IanOS',
   appTitle: 'personal operating system',
   status: 'ONLINE',
   version: 'kernel v2.6',
+  theme: DEFAULT_THEME_CONFIG,
   modulePrefix: 'MODULE:',
   commandPrompt: {
     userHost: 'ian@IanOS',
