@@ -149,7 +149,7 @@ async function getMutationContext(portfolioSlug: string) {
   }
 
   const access = await requirePortfolioManager(portfolioSlug);
-  const supabase = createAdminSupabaseClient(tokens.accessToken);
+  const supabase = await createAdminSupabaseClient(tokens.accessToken);
 
   return { access, supabase };
 }
@@ -160,7 +160,7 @@ function revalidateProjects(portfolioSlug: string) {
 }
 
 async function ensureProjectBelongsToPortfolio(
-  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
   portfolioId: string,
   projectId: string,
 ) {
@@ -181,7 +181,7 @@ async function ensureProjectBelongsToPortfolio(
 }
 
 async function ensureSlugIsAvailable(
-  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
   portfolioId: string,
   slug: string,
   projectId?: string,
@@ -203,7 +203,7 @@ async function ensureSlugIsAvailable(
   }
 }
 
-async function getNextOrderIndex(supabase: ReturnType<typeof createAdminSupabaseClient>, portfolioId: string) {
+async function getNextOrderIndex(supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>, portfolioId: string) {
   const { data, error } = await supabase
     .from('projects')
     .select('order_index')

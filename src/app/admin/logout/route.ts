@@ -7,7 +7,7 @@ export async function GET() {
   const tokens = await getAdminSessionTokens();
 
   if (tokens?.accessToken) {
-    const supabase = createAdminSupabaseClient(tokens.accessToken);
+    const supabase = await createAdminSupabaseClient(tokens.accessToken);
     await supabase.auth.signOut();
   }
 

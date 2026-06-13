@@ -61,7 +61,7 @@ function normalizePortfolioMember(row: CmsPortfolioMemberRow): PortfolioMember {
 }
 
 async function getAuthenticatedUser(accessToken: string) {
-  const supabase = createAdminSupabaseClient(accessToken);
+  const supabase = await createAdminSupabaseClient(accessToken);
   const { data, error } = await supabase.auth.getUser(accessToken);
 
   if (error || !data.user) {
@@ -85,7 +85,7 @@ export async function getUserPortfoliosForAccessToken(accessToken: string): Prom
     return [];
   }
 
-  const supabase = createAdminSupabaseClient(auth.accessToken);
+  const supabase = await createAdminSupabaseClient(auth.accessToken);
   const { data: memberRows, error: memberError } = await supabase
     .from('portfolio_members')
     .select('id,portfolio_id,user_id,email,role,is_active,created_at,updated_at')

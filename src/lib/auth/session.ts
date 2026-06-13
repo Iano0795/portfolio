@@ -22,14 +22,10 @@ function readPublicSupabaseEnv() {
   return { supabaseUrl, supabaseAnonKey };
 }
 
-export function createAdminSupabaseClient(accessToken?: string): SupabaseClient {
+export async function createAdminSupabaseClient(accessToken?: string): Promise<SupabaseClient> {
   const { supabaseUrl, supabaseAnonKey } = readPublicSupabaseEnv();
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
     global: accessToken
       ? {
           headers: {
@@ -37,7 +33,13 @@ export function createAdminSupabaseClient(accessToken?: string): SupabaseClient 
           },
         }
       : undefined,
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
   });
+
+  return client;
 }
 
 export async function getAdminSessionTokens() {

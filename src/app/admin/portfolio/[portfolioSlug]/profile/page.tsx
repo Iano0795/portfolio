@@ -105,7 +105,7 @@ async function getEditableProfile(portfolioId: string) {
     return null;
   }
 
-  const supabase = createAdminSupabaseClient(tokens.accessToken);
+  const supabase = await createAdminSupabaseClient(tokens.accessToken);
   const { data, error } = await supabase
     .from('profile')
     .select('*')

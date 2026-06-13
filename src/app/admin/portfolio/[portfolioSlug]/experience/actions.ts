@@ -81,7 +81,7 @@ async function getMutationContext(portfolioSlug: string) {
   }
 
   const access = await requirePortfolioManager(portfolioSlug);
-  const supabase = createAdminSupabaseClient(tokens.accessToken);
+  const supabase = await createAdminSupabaseClient(tokens.accessToken);
 
   return { access, supabase };
 }
@@ -92,7 +92,7 @@ function revalidateExperience(portfolioSlug: string) {
 }
 
 async function ensureExperienceBelongsToPortfolio(
-  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
   portfolioId: string,
   experienceId: string,
 ) {
@@ -112,7 +112,7 @@ async function ensureExperienceBelongsToPortfolio(
   }
 }
 
-async function getNextOrderIndex(supabase: ReturnType<typeof createAdminSupabaseClient>, portfolioId: string) {
+async function getNextOrderIndex(supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>, portfolioId: string) {
   const { data, error } = await supabase
     .from('experience')
     .select('order_index')

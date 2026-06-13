@@ -24,7 +24,7 @@ const sidebarItems = [
   { id: 'contact', label: 'Contact', module: 'contact.links', icon: Contact, href: '/contact' },
   { label: 'Capabilities', module: 'capabilities.map', icon: Network },
   { label: 'Process', module: 'process.pipeline', icon: Route },
-  { label: 'Resume', module: 'resume.asset', icon: FileText },
+  { id: 'resume', label: 'Resume', module: 'resume.asset', icon: FileText, href: '/resume' },
   { label: 'Navigation', module: 'nav.registry', icon: Map },
   { label: 'Theme', module: 'theme.tokens', icon: Palette },
   { label: 'Media Library', module: 'media.vault', icon: Image },
@@ -32,7 +32,7 @@ const sidebarItems = [
 ];
 
 type AdminSidebarProps = {
-  activeItem: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact';
+  activeItem: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact' | 'resume';
   portfolioSlug: string;
 };
 

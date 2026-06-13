@@ -6,7 +6,7 @@ import { AdminStatusBar } from './AdminStatusBar';
 import { AdminTopBar } from './AdminTopBar';
 
 type AdminShellProps = {
-  activeItem?: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact';
+  activeItem?: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact' | 'resume';
   portfolio: Portfolio;
   user: User;
   role: PortfolioRole;
