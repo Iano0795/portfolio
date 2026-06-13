@@ -100,9 +100,6 @@ export function ExperienceForm({ disabled, experience, mode, onCancel, onChange,
           <legend className="mb-3 font-mono text-xs uppercase tracking-wide text-gray-400">Description</legend>
 
           <div>
-            <label htmlFor="experience-description" className="mb-1.5 block font-mono text-xs text-gray-300">
-              Description
-            </label>
             <textarea
               id="experience-description"
               value={experience.description}
