@@ -13,6 +13,7 @@ import {
   getActiveResume,
   getCapabilities,
   getContactLinks,
+  getCredentials,
   getExperience,
   getNavigationItems,
   getPortfolioBySlug,
@@ -23,6 +24,7 @@ import {
   getSkills,
   type CmsCapability,
   type CmsContactLink,
+  type CmsCredential,
   type CmsExperience,
   type CmsNavigationItem,
   type CmsProcessStep,
@@ -37,6 +39,7 @@ import type {
   ConsoleData,
   ContactData,
   ContactLink,
+  Credential,
   ExperienceData,
   ExperienceEntry,
   LabelValue,
@@ -61,8 +64,8 @@ import type {
 
 type JsonObject = Record<string, unknown>;
 
-const validSectionIds: SectionId[] = ['profile', 'about', 'capabilities', 'skills', 'projects', 'process', 'experience', 'contact'];
-const validNavigationIcons: NavigationIconName[] = ['user', 'file-text', 'network', 'cpu', 'folder-git', 'git-branch', 'briefcase', 'send'];
+const validSectionIds: SectionId[] = ['profile', 'about', 'capabilities', 'skills', 'projects', 'credentials', 'process', 'experience', 'contact'];
+const validNavigationIcons: NavigationIconName[] = ['user', 'file-text', 'network', 'shield', 'award', 'cpu', 'folder-git', 'git-branch', 'briefcase', 'send'];
 const validProjectCategories: ProjectCategory[] = ['Enterprise Platforms', 'DXP/DWS', 'Integrations', 'Security'];
 
 function isObject(value: unknown): value is JsonObject {
@@ -208,9 +211,16 @@ export async function getSupabaseResumeData(options?: PortfolioQueryOptions): Pr
   };
 }
 
+export async function getSupabaseCredentialsData(options?: PortfolioQueryOptions): Promise<Credential[]> {
+  await resolvePortfolio(options);
+  const credentials = await getCredentials(options);
+
+  return credentials.map(normalizeCredential);
+}
+
 export async function getSupabasePortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {
   const portfolio = await resolvePortfolio(options);
-  const [site, navigation, console, profile, projects, skills, experience, capabilities, process, contact, resume] =
+  const [site, navigation, console, profile, projects, skills, experience, capabilities, process, contact, resume, credentials] =
     await Promise.all([
       getSupabaseSiteConfigData(options),
       getSupabaseNavigationData(options),
@@ -223,6 +233,7 @@ export async function getSupabasePortfolioData(options?: PortfolioQueryOptions):
       getSupabaseProcessData(options),
       getSupabaseContactData(options),
       getSupabaseResumeData(options),
+      getSupabaseCredentialsData(options),
     ]);
 
   return {
@@ -239,6 +250,28 @@ export async function getSupabasePortfolioData(options?: PortfolioQueryOptions):
     process,
     contact,
     resume,
+    credentials,
+  };
+}
+
+function normalizeCredential(row: CmsCredential): Credential {
+  return {
+    id: row.id,
+    portfolio_id: row.portfolio_id,
+    title: row.title,
+    issuer: row.issuer,
+    credential_type: row.credential_type,
+    category: row.category,
+    description: row.description,
+    issued_at: row.issued_at,
+    expires_at: row.expires_at,
+    credential_id: row.credential_id,
+    credential_url: row.credential_url,
+    image_url: row.image_url,
+    skills: isStringArray(row.skills) ? row.skills : [],
+    order_index: row.order_index ?? 0,
+    is_featured: row.is_featured ?? false,
+    is_active: row.is_active ?? true,
   };
 }
 

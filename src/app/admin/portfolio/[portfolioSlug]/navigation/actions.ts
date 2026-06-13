@@ -31,7 +31,7 @@ function validateMax(value: string, label: string, max: number, errors: string[]
   }
 }
 
-const SUPPORTED_SECTIONS = ['profile', 'about', 'capabilities', 'skills', 'projects', 'process', 'experience', 'contact'];
+const SUPPORTED_SECTIONS = ['profile', 'about', 'capabilities', 'skills', 'projects', 'credentials', 'process', 'experience', 'contact'];
 
 function validateNavigationItemPayload(payload: NavigationItemPayload): NavigationItemInput {
   const sectionId = cleanString(payload.sectionId).toLowerCase();

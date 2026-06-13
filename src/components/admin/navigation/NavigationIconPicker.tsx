@@ -2,6 +2,7 @@
 
 import {
   Activity,
+  Award,
   Briefcase,
   Code,
   Cpu,
@@ -41,6 +42,7 @@ const ICON_OPTIONS = [
   { value: 'send', label: 'Send', Icon: Send },
   { value: 'file-text', label: 'File Text', Icon: FileText },
   { value: 'shield', label: 'Shield', Icon: Shield },
+  { value: 'award', label: 'Award', Icon: Award },
   { value: 'lock', label: 'Lock', Icon: Lock },
   { value: 'terminal', label: 'Terminal', Icon: Terminal },
   { value: 'settings', label: 'Settings', Icon: Settings },
