@@ -242,29 +242,30 @@ export async function getSupabasePortfolioData(options?: PortfolioQueryOptions):
 }
 
 function normalizeSiteConfig(settings: CmsSiteSettings | null, portfolio: Portfolio | null): SiteConfig {
-  if (!settings) {
-    if (!isDefaultPortfolio(portfolio)) {
-      return {
-        ...siteConfig,
-        brandName: portfolio?.brandName ?? portfolio?.ownerName ?? siteConfig.brandName,
-        appTitle: portfolio?.title ?? siteConfig.appTitle,
-        initialConsoleOutput: `${portfolio?.brandName ?? portfolio?.ownerName ?? 'Portfolio'} content pending. CMS portfolio shell ready.`,
-        commandPrompt: {
-          ...siteConfig.commandPrompt,
-          userHost: `${portfolio?.slug ?? 'portfolio'}@${portfolio?.brandName ?? portfolio?.ownerName ?? 'CMS'}`,
-        },
-      };
-    }
+  const portfolioBrandName = portfolio?.brandName ?? portfolio?.ownerName ?? siteConfig.brandName;
+  const portfolioTitle = portfolio?.title ?? siteConfig.appTitle;
 
-    return siteConfig;
+  if (!settings) {
+    return {
+      ...siteConfig,
+      brandName: portfolioBrandName,
+      appTitle: portfolioTitle,
+      initialConsoleOutput: isDefaultPortfolio(portfolio)
+        ? siteConfig.initialConsoleOutput
+        : `${portfolioBrandName} content pending. CMS portfolio shell ready.`,
+      commandPrompt: {
+        ...siteConfig.commandPrompt,
+        userHost: portfolio ? `${portfolio.slug}@${portfolioBrandName}` : siteConfig.commandPrompt.userHost,
+      },
+    };
   }
 
   const defaultSection = settings.default_section ? normalizeSectionId(settings.default_section) : null;
 
   return {
     ...siteConfig,
-    brandName: normalizeString(settings.brand_name, siteConfig.brandName),
-    appTitle: normalizeString(settings.app_title, siteConfig.appTitle),
+    brandName: normalizeString(settings.brand_name, portfolioBrandName),
+    appTitle: normalizeString(settings.app_title, portfolioTitle),
     version: normalizeString(settings.version_label, siteConfig.version),
     status: normalizeString(settings.status_label, siteConfig.status),
     defaultActiveSection: defaultSection ?? siteConfig.defaultActiveSection,

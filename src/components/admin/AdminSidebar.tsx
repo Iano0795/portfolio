@@ -25,14 +25,25 @@ const sidebarItems = [
   { id: 'capabilities', label: 'Capabilities', module: 'capabilities.map', icon: Network, href: '/capabilities' },
   { id: 'process', label: 'Process', module: 'process.pipeline', icon: Route, href: '/process' },
   { id: 'resume', label: 'Resume', module: 'resume.asset', icon: FileText, href: '/resume' },
-  { label: 'Navigation', module: 'nav.registry', icon: Map },
+  { id: 'navigation', label: 'Navigation', module: 'nav.registry', icon: Map, href: '/navigation' },
+  { id: 'settings', label: 'Settings', module: 'system.settings', icon: Settings, href: '/settings' },
   { label: 'Theme', module: 'theme.tokens', icon: Palette },
   { label: 'Media Library', module: 'media.vault', icon: Image },
-  { label: 'Settings', module: 'system.settings', icon: Settings },
 ];
 
 type AdminSidebarProps = {
-  activeItem: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience' | 'contact' | 'capabilities' | 'process' | 'resume';
+  activeItem:
+    | 'dashboard'
+    | 'profile'
+    | 'projects'
+    | 'skills'
+    | 'experience'
+    | 'contact'
+    | 'capabilities'
+    | 'process'
+    | 'resume'
+    | 'navigation'
+    | 'settings';
   portfolioSlug: string;
 };
 
