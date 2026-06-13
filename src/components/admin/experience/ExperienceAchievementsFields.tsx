@@ -31,8 +31,7 @@ export function ExperienceAchievementsFields({ achievements, disabled, onChange 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="block font-mono text-xs text-gray-300">Achievements / Log Lines</label>
+      <div className="flex items-center justify-end">
         <button
           type="button"
           onClick={handleAdd}
