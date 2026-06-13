@@ -19,8 +19,8 @@ const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', module: 'control.index', icon: Gauge, href: '' },
   { id: 'profile', label: 'Profile', module: 'profile.editor', icon: UserRound, href: '/profile' },
   { id: 'projects', label: 'Projects', module: 'projects.editor', icon: FolderGit2, href: '/projects' },
-  { label: 'Skills', module: 'skills.matrix', icon: Cpu },
-  { label: 'Experience', module: 'career.timeline', icon: Briefcase },
+  { id: 'skills', label: 'Skills', module: 'skills.matrix', icon: Cpu, href: '/skills' },
+  { id: 'experience', label: 'Experience', module: 'career.timeline', icon: Briefcase, href: '/experience' },
   { label: 'Capabilities', module: 'capabilities.map', icon: Network },
   { label: 'Process', module: 'process.pipeline', icon: Route },
   { label: 'Contact', module: 'contact.links', icon: Contact },
@@ -32,7 +32,7 @@ const sidebarItems = [
 ];
 
 type AdminSidebarProps = {
-  activeItem: 'dashboard' | 'profile' | 'projects';
+  activeItem: 'dashboard' | 'profile' | 'projects' | 'skills' | 'experience';
   portfolioSlug: string;
 };
 
