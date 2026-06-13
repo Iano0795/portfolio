@@ -1,5 +1,6 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import type { PortfolioData, QuickCommand, SectionId } from '@/types/portfolio';
 import { AboutSection } from '@/components/sections/AboutSection';
@@ -20,9 +21,24 @@ type PortfolioShellProps = {
   portfolioData: PortfolioData;
 };
 
+function getFontFamily(fontMode: PortfolioData['site']['theme']['fontMode']) {
+  switch (fontMode) {
+    case 'system':
+      return 'ui-sans-serif, system-ui, sans-serif';
+    case 'readable':
+      return 'var(--font-display), ui-sans-serif, system-ui, sans-serif';
+    case 'mono':
+      return 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+    case 'retro':
+    default:
+      return 'var(--font-terminal), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+  }
+}
+
 export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
   const sections = portfolioData.navigation.items;
   const site = portfolioData.site;
+  const theme = site.theme;
   const [activeSection, setActiveSection] = useState<SectionId>(site.defaultActiveSection);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [booted, setBooted] = useState(false);
@@ -31,6 +47,20 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
   const [consoleOutput, setConsoleOutput] = useState(site.initialConsoleOutput);
 
   const activeConfig = sections.find((section) => section.id === activeSection) ?? sections[0];
+  const animationDuration = `${Math.max(8, 60 - theme.animationIntensity * 0.45)}s`;
+  const themeStyle = {
+    '--portfolio-primary': theme.primary,
+    '--portfolio-secondary': theme.secondary,
+    '--portfolio-background': theme.background,
+    '--portfolio-panel': theme.panel,
+    '--portfolio-foreground': theme.foreground,
+    '--portfolio-muted': theme.muted,
+    '--portfolio-border': theme.border,
+    '--portfolio-glow-intensity': String(theme.glowIntensity),
+    backgroundColor: theme.background,
+    color: theme.foreground,
+    fontFamily: getFontFamily(theme.fontMode),
+  } as CSSProperties;
 
   useEffect(() => {
     const timer = setTimeout(() => setBooted(true), 100);
@@ -144,17 +174,28 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#050812] text-gray-200 overflow-hidden relative selection:bg-[#00ff88]/20 selection:text-[#eafff5]">
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.035] z-50 animate-scanline"
-        style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #00ff88 2px, #00ff88 4px)' }}
-      />
+    <div
+      className="h-screen flex flex-col bg-[#050812] text-gray-200 overflow-hidden relative selection:bg-[#00ff88]/20 selection:text-[#eafff5]"
+      style={themeStyle}
+    >
+      {theme.scanlinesEnabled && (
+        <div
+          className="absolute inset-0 pointer-events-none z-50 animate-scanline"
+          style={{
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${theme.primary} 2px, ${theme.primary} 4px)`,
+            opacity: Math.max(0.01, theme.glowIntensity / 2000),
+            animationDuration,
+          }}
+        />
+      )}
 
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03] animate-grid-move"
+        className="absolute inset-0 pointer-events-none animate-grid-move"
         style={{
-          backgroundImage: 'linear-gradient(#00ff88 1px, transparent 1px), linear-gradient(90deg, #00d9ff 1px, transparent 1px)',
+          backgroundImage: `linear-gradient(${theme.primary} 1px, transparent 1px), linear-gradient(90deg, ${theme.secondary} 1px, transparent 1px)`,
           backgroundSize: '56px 56px',
+          opacity: Math.max(0, theme.glowIntensity / 2500),
+          animationDuration,
         }}
       />
 

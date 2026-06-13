@@ -88,11 +88,30 @@ export type NavigationData = {
   quickCommands: QuickCommand[];
 };
 
+export type ThemeFontMode = 'system' | 'mono' | 'retro' | 'readable';
+
+export type ThemeConfig = {
+  presetName: string;
+  primary: string;
+  secondary: string;
+  background: string;
+  panel: string;
+  foreground: string;
+  muted: string;
+  border: string;
+  glowIntensity: number;
+  scanlinesEnabled: boolean;
+  animationIntensity: number;
+  fontMode: ThemeFontMode;
+  isActive: boolean;
+};
+
 export type SiteConfig = {
   brandName: string;
   appTitle: string;
   status: string;
   version: string;
+  theme: ThemeConfig;
   modulePrefix: string;
   commandPrompt: {
     userHost: string;
