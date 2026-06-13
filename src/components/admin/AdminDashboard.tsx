@@ -11,8 +11,8 @@ type AdminDashboardSummary = {
 };
 
 const contentRows = [
-  ['profile.editor', 'Profile', 'Locked', 'CRUD pending'],
-  ['projects.editor', 'Projects', 'Locked', 'CRUD pending'],
+  ['profile.editor', 'Profile', 'Active', 'Editor online'],
+  ['projects.editor', 'Projects', 'Active', 'Manager online'],
   ['skills.matrix', 'Skills', 'Locked', 'CRUD pending'],
   ['career.timeline', 'Experience', 'Locked', 'CRUD pending'],
   ['contact.links', 'Contact', 'Locked', 'CRUD pending'],
