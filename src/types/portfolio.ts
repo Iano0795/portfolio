@@ -353,6 +353,101 @@ export type Credential = {
   is_active: boolean;
 };
 
+// ============================================================================
+// Lab Writeups - Restricted Access System
+// ============================================================================
+
+export type LabWriteupVisibility = 'public' | 'restricted' | 'private';
+export type LabWriteupMachineStatus = 'active' | 'retired' | 'other';
+
+export type LabWriteup = {
+  id: string;
+  portfolio_id?: string;
+  project_id?: string | null;
+  title: string;
+  slug: string;
+  platform?: string | null;
+  difficulty?: string | null;
+  category?: string | null;
+  machine_status: LabWriteupMachineStatus;
+  visibility: LabWriteupVisibility;
+  public_summary?: string | null;
+  public_teaser?: string | null;
+  tools: string[];
+  skills: string[];
+  tags: string[];
+  storage_bucket?: string | null;
+  storage_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  is_featured: boolean;
+  is_active: boolean;
+  order_index: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type WriteupAccessRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export type WriteupAccessRequest = {
+  id: string;
+  portfolio_id: string;
+  writeup_id: string;
+  requester_name: string;
+  requester_email: string;
+  requester_reason?: string | null;
+  requester_organization?: string | null;
+  status: WriteupAccessRequestStatus;
+  reviewer_user_id?: string | null;
+  reviewer_note?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WriteupAccessGrant = {
+  id: string;
+  portfolio_id: string;
+  writeup_id: string;
+  request_id?: string | null;
+  requester_email: string;
+  token_hash: string;
+  token_label?: string | null;
+  expires_at?: string | null;
+  max_views?: number | null;
+  views_used: number;
+  revoked_at?: string | null;
+  revoked_by?: string | null;
+  revoke_reason?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WriteupAccessLogEventType =
+  | 'request_created'
+  | 'request_approved'
+  | 'request_rejected'
+  | 'grant_created'
+  | 'grant_viewed'
+  | 'grant_revoked'
+  | 'grant_expired'
+  | 'file_signed_url_created'
+  | 'access_denied';
+
+export type WriteupAccessLog = {
+  id: string;
+  portfolio_id: string;
+  writeup_id?: string | null;
+  grant_id?: string | null;
+  request_id?: string | null;
+  event_type: WriteupAccessLogEventType;
+  actor_email?: string | null;
+  actor_user_id?: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
 export type PortfolioData = {
   portfolio: Portfolio;
   site: SiteConfig;
