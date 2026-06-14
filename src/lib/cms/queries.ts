@@ -169,6 +169,81 @@ export type CmsCredential = {
   updated_at: string | null;
 };
 
+export type CmsLabWriteup = {
+  id: string;
+  portfolio_id: string;
+  project_id: string | null;
+  title: string;
+  slug: string;
+  platform: string | null;
+  difficulty: string | null;
+  category: string | null;
+  machine_status: string;
+  visibility: string;
+  public_summary: string | null;
+  public_teaser: string | null;
+  tools: JsonValue;
+  skills: JsonValue;
+  tags: JsonValue;
+  storage_bucket: string | null;
+  storage_path: string | null;
+  file_name: string | null;
+  file_type: string | null;
+  is_featured: boolean | null;
+  is_active: boolean | null;
+  order_index: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type CmsWriteupAccessRequest = {
+  id: string;
+  portfolio_id: string;
+  writeup_id: string;
+  requester_name: string;
+  requester_email: string;
+  requester_reason: string | null;
+  requester_organization: string | null;
+  status: string;
+  reviewer_user_id: string | null;
+  reviewer_note: string | null;
+  reviewed_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type CmsWriteupAccessGrant = {
+  id: string;
+  portfolio_id: string;
+  writeup_id: string;
+  request_id: string | null;
+  requester_email: string;
+  token_hash: string;
+  token_label: string | null;
+  expires_at: string | null;
+  max_views: number | null;
+  views_used: number;
+  revoked_at: string | null;
+  revoked_by: string | null;
+  revoke_reason: string | null;
+  created_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type CmsWriteupAccessLog = {
+  id: string;
+  portfolio_id: string;
+  writeup_id: string | null;
+  grant_id: string | null;
+  request_id: string | null;
+  event_type: string;
+  actor_email: string | null;
+  actor_user_id: string | null;
+  metadata: JsonValue;
+  created_at: string | null;
+};
+
 export type CmsSiteSettings = {
   id: string;
   portfolio_id: string;
@@ -536,5 +611,154 @@ export async function getActiveResume(options?: PortfolioQueryOptions): Promise<
       .order('uploaded_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+  );
+}
+
+// ============================================================================
+// Lab Writeups - Restricted Access System
+// ============================================================================
+
+/**
+ * Get public lab writeups for display on public portfolio
+ * Only returns active writeups with visibility='public' for active portfolios
+ */
+export async function getPublicLabWriteups(options?: PortfolioQueryOptions): Promise<CmsLabWriteup[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireList<CmsLabWriteup>(
+    supabase
+      .from('lab_writeups')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .eq('is_active', true)
+      .eq('visibility', 'public')
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: false }),
+  );
+}
+
+/**
+ * Get all lab writeups for admin/CMS view
+ * Returns all writeups (including restricted/private) for portfolio members
+ * Requires authentication and portfolio access
+ */
+export async function getAdminLabWriteups(options?: PortfolioQueryOptions): Promise<CmsLabWriteup[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireList<CmsLabWriteup>(
+    supabase
+      .from('lab_writeups')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: false }),
+  );
+}
+
+/**
+ * Get a specific lab writeup by slug
+ * Returns writeup if user has access (public for all, or portfolio member for restricted/private)
+ */
+export async function getLabWriteupBySlug(
+  slug: string,
+  options?: PortfolioQueryOptions,
+): Promise<CmsLabWriteup | null> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return null;
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireMaybeSingle<CmsLabWriteup>(
+    supabase
+      .from('lab_writeups')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .maybeSingle(),
+  );
+}
+
+/**
+ * Get writeup access requests for a portfolio
+ * Requires authentication and portfolio access
+ */
+export async function getWriteupAccessRequests(
+  options?: PortfolioQueryOptions,
+): Promise<CmsWriteupAccessRequest[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireList<CmsWriteupAccessRequest>(
+    supabase
+      .from('writeup_access_requests')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .order('created_at', { ascending: false }),
+  );
+}
+
+/**
+ * Get writeup access grants for a portfolio
+ * Requires authentication and portfolio access
+ */
+export async function getWriteupAccessGrants(options?: PortfolioQueryOptions): Promise<CmsWriteupAccessGrant[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireList<CmsWriteupAccessGrant>(
+    supabase
+      .from('writeup_access_grants')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .order('created_at', { ascending: false }),
+  );
+}
+
+/**
+ * Get writeup access logs for a portfolio
+ * Requires authentication and portfolio access
+ */
+export async function getWriteupAccessLogs(options?: PortfolioQueryOptions): Promise<CmsWriteupAccessLog[]> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return [];
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireList<CmsWriteupAccessLog>(
+    supabase
+      .from('writeup_access_logs')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .order('created_at', { ascending: false })
+      .limit(100),
   );
 }
