@@ -14,12 +14,14 @@ import {
   Settings,
   Sparkles,
   UserRound,
+  Shield,
 } from 'lucide-react';
 
 const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', module: 'control.index', icon: Gauge, href: '' },
   { id: 'profile', label: 'Profile', module: 'profile.editor', icon: UserRound, href: '/profile' },
   { id: 'projects', label: 'Projects', module: 'projects.editor', icon: FolderGit2, href: '/projects' },
+  { id: 'writeups', label: 'Writeups', module: 'writeups.vault', icon: Shield, href: '/writeups' },
   { id: 'credentials', label: 'Credentials', module: 'credentials.vault', icon: Award, href: '/credentials' },
   { id: 'skills', label: 'Skills', module: 'skills.matrix', icon: Cpu, href: '/skills' },
   { id: 'experience', label: 'Experience', module: 'career.timeline', icon: Briefcase, href: '/experience' },
@@ -47,7 +49,8 @@ type AdminSidebarProps = {
     | 'resume'
     | 'navigation'
     | 'settings'
-    | 'theme';
+    | 'theme'
+    | 'writeups';
   portfolioSlug: string;
 };
 
