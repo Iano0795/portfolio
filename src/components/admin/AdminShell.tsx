@@ -19,7 +19,8 @@ type AdminShellProps = {
     | 'resume'
     | 'navigation'
     | 'settings'
-    | 'theme';
+    | 'theme'
+    | 'writeups';
   portfolio: Portfolio;
   user: User;
   role: PortfolioRole;
