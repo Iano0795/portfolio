@@ -15,6 +15,7 @@ import {
   Sparkles,
   UserRound,
   Shield,
+  ShieldCheck,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -22,6 +23,7 @@ const sidebarItems = [
   { id: 'profile', label: 'Profile', module: 'profile.editor', icon: UserRound, href: '/profile' },
   { id: 'projects', label: 'Projects', module: 'projects.editor', icon: FolderGit2, href: '/projects' },
   { id: 'writeups', label: 'Writeups', module: 'writeups.vault', icon: Shield, href: '/writeups' },
+  { id: 'access-requests', label: 'Access Requests', module: 'access.queue', icon: ShieldCheck, href: '/access-requests' },
   { id: 'credentials', label: 'Credentials', module: 'credentials.vault', icon: Award, href: '/credentials' },
   { id: 'skills', label: 'Skills', module: 'skills.matrix', icon: Cpu, href: '/skills' },
   { id: 'experience', label: 'Experience', module: 'career.timeline', icon: Briefcase, href: '/experience' },
@@ -50,7 +52,8 @@ type AdminSidebarProps = {
     | 'navigation'
     | 'settings'
     | 'theme'
-    | 'writeups';
+    | 'writeups'
+    | 'access-requests';
   portfolioSlug: string;
 };
 
