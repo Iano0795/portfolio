@@ -20,7 +20,8 @@ type AdminShellProps = {
     | 'navigation'
     | 'settings'
     | 'theme'
-    | 'writeups';
+    | 'writeups'
+    | 'access-requests';
   portfolio: Portfolio;
   user: User;
   role: PortfolioRole;
