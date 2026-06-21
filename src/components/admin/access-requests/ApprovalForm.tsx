@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from 'react';
-import { CheckCircle2, Loader2, Copy, Check } from 'lucide-react';
+import { useState } from "react";
+import {
+  CheckCircle2,
+  Loader2,
+  Copy,
+  Check,
+  AlertTriangle,
+  Mail,
+  XCircle,
+} from "lucide-react";
+import type { FlatApproveResult } from "./AccessRequestsManager";
 
 type ApprovalFormProps = {
   requestId: string;
@@ -12,9 +21,59 @@ type ApprovalFormProps = {
     expiresInDays?: number;
     maxViews?: number;
     tokenLabel?: string;
-  }) => Promise<{ success: boolean; error?: string; rawToken?: string }>;
+  }) => Promise<FlatApproveResult>;
   onCancel: () => void;
 };
+
+type EmailStatusBadgeProps = {
+  status: "sent" | "failed" | "skipped";
+  warning?: string;
+};
+
+function EmailStatusBadge({ status, warning }: EmailStatusBadgeProps) {
+  if (status === "sent") {
+    return (
+      <div className="flex items-start gap-2 rounded border border-green-500/35 bg-green-500/10 p-3">
+        <Mail
+          className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-green-400"
+          strokeWidth={1.8}
+        />
+        <p className="text-xs text-green-300">
+          Approval email sent to requester.
+        </p>
+      </div>
+    );
+  }
+
+  if (status === "failed") {
+    return (
+      <div className="flex items-start gap-2 rounded border border-red-500/35 bg-red-500/10 p-3">
+        <XCircle
+          className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-red-400"
+          strokeWidth={1.8}
+        />
+        <p className="text-xs text-red-300">
+          {warning ??
+            "Approval email failed to send. Notify the requester manually."}
+        </p>
+      </div>
+    );
+  }
+
+  // skipped
+  return (
+    <div className="flex items-start gap-2 rounded border border-yellow-500/35 bg-yellow-500/10 p-3">
+      <AlertTriangle
+        className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-yellow-400"
+        strokeWidth={1.8}
+      />
+      <p className="text-xs text-yellow-300">
+        {warning ??
+          "Approval email was not sent. Share the token with the requester manually."}
+      </p>
+    </div>
+  );
+}
 
 export function ApprovalForm({
   requestId,
@@ -27,20 +86,26 @@ export function ApprovalForm({
   const [showSuccess, setShowSuccess] = useState(false);
   const [rawToken, setRawToken] = useState<string | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
+  const [approveResult, setApproveResult] = useState<FlatApproveResult | null>(
+    null,
+  );
   const [formData, setFormData] = useState({
-    reviewerNote: '',
+    reviewerNote: "",
     expiresInDays: 14,
     maxViews: 5,
-    tokenLabel: '',
+    tokenLabel: "",
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'expiresInDays' || name === 'maxViews' ? parseInt(value, 10) || 0 : value,
+      [name]:
+        name === "expiresInDays" || name === "maxViews"
+          ? parseInt(value, 10) || 0
+          : value,
     }));
   };
 
@@ -59,6 +124,7 @@ export function ApprovalForm({
 
     if (result.success && result.rawToken) {
       setRawToken(result.rawToken);
+      setApproveResult(result);
       setShowSuccess(true);
     } else if (!result.success && result.error) {
       alert(result.error);
@@ -74,34 +140,39 @@ export function ApprovalForm({
   };
 
   if (showSuccess && rawToken) {
+    const emailStatus = approveResult?.emailStatus;
+
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* Success banner */}
         <div className="flex items-start gap-3 rounded-md border border-green-500/35 bg-green-500/10 p-4">
-          <CheckCircle2 className="mt-0.5 h-5 w-5 text-green-400" strokeWidth={1.8} />
+          <CheckCircle2
+            className="mt-0.5 h-5 w-5 text-green-400"
+            strokeWidth={1.8}
+          />
           <div className="flex-1">
             <h3 className="font-mono text-sm font-semibold text-green-400">
               Access Request Approved
             </h3>
             <p className="mt-1 text-xs text-green-300">
-              Grant created successfully. The access token is displayed below.
+              Grant created successfully. The access token is shown below — copy
+              it now.
             </p>
           </div>
         </div>
 
+        {/* Security notice */}
         <div className="rounded-md border border-yellow-500/35 bg-yellow-500/10 p-4">
           <p className="font-mono text-xs font-semibold text-yellow-400">
-            ⚠️ Security Notice
+            ⚠️ One-time Token
           </p>
           <p className="mt-2 text-xs leading-relaxed text-yellow-300">
-            This token will only be shown once. Copy it now and send it to the requester
-            via email. After closing this panel, the token cannot be retrieved.
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-yellow-300">
-            <strong>Note:</strong> Email delivery and secure access page features are
-            planned for upcoming tasks.
+            This token is shown only once. After closing this panel it cannot be
+            retrieved. Copy and keep it safe.
           </p>
         </div>
 
+        {/* Raw token */}
         <div>
           <label className="block font-mono text-xs font-medium text-cyan-400">
             Raw Access Token
@@ -133,7 +204,20 @@ export function ApprovalForm({
           </div>
         </div>
 
-        <div className="flex justify-end">
+        {/* Email status */}
+        {emailStatus && (
+          <div>
+            <p className="mb-2 font-mono text-xs font-medium text-cyan-400">
+              Approval Email
+            </p>
+            <EmailStatusBadge
+              status={emailStatus.approvalEmail}
+              warning={emailStatus.approvalEmailWarning}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end pt-2">
           <button
             type="button"
             onClick={onCancel}
@@ -149,7 +233,9 @@ export function ApprovalForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="rounded-md border border-cyan-400/25 bg-cyan-400/5 p-4">
-        <h3 className="font-mono text-sm font-semibold text-cyan-400">Approve Access Request</h3>
+        <h3 className="font-mono text-sm font-semibold text-cyan-400">
+          Approve Access Request
+        </h3>
         <p className="mt-2 text-xs text-gray-400">
           Writeup: <span className="text-cyan-300">{writeupTitle}</span>
         </p>
@@ -159,7 +245,10 @@ export function ApprovalForm({
       </div>
 
       <div>
-        <label htmlFor="reviewerNote" className="block font-mono text-xs font-medium text-cyan-400">
+        <label
+          htmlFor="reviewerNote"
+          className="block font-mono text-xs font-medium text-cyan-400"
+        >
           Reviewer Note <span className="text-gray-500">(Optional)</span>
         </label>
         <textarea
@@ -180,7 +269,10 @@ export function ApprovalForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="expiresInDays" className="block font-mono text-xs font-medium text-cyan-400">
+          <label
+            htmlFor="expiresInDays"
+            className="block font-mono text-xs font-medium text-cyan-400"
+          >
             Expires In (Days)
           </label>
           <input
@@ -198,7 +290,10 @@ export function ApprovalForm({
         </div>
 
         <div>
-          <label htmlFor="maxViews" className="block font-mono text-xs font-medium text-cyan-400">
+          <label
+            htmlFor="maxViews"
+            className="block font-mono text-xs font-medium text-cyan-400"
+          >
             Max Views
           </label>
           <input
@@ -217,7 +312,10 @@ export function ApprovalForm({
       </div>
 
       <div>
-        <label htmlFor="tokenLabel" className="block font-mono text-xs font-medium text-cyan-400">
+        <label
+          htmlFor="tokenLabel"
+          className="block font-mono text-xs font-medium text-cyan-400"
+        >
           Token Label <span className="text-gray-500">(Optional)</span>
         </label>
         <input
