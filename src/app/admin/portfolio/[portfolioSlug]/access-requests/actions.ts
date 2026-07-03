@@ -120,6 +120,7 @@ export async function approveAccessRequest(
           title,
           visibility,
           machine_status,
+          is_requestable,
           is_active
         )
       `,
@@ -152,10 +153,10 @@ export async function approveAccessRequest(
         error: "Only restricted writeups can have access grants",
       };
     }
-    if (writeup.machine_status === "active") {
+    if (!writeup.is_requestable) {
       return {
         success: false,
-        error: "Cannot grant access to active machines",
+        error: "This writeup is not marked requestable",
       };
     }
 

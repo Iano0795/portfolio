@@ -4,6 +4,7 @@ export type SectionId =
   | 'capabilities'
   | 'skills'
   | 'projects'
+  | 'writeups'
   | 'credentials'
   | 'process'
   | 'experience'
@@ -359,6 +360,7 @@ export type Credential = {
 
 export type LabWriteupVisibility = 'public' | 'restricted' | 'private';
 export type LabWriteupMachineStatus = 'active' | 'retired' | 'other';
+export type LabWriteupType = 'offensive' | 'defensive';
 
 export type LabWriteup = {
   id: string;
@@ -369,10 +371,16 @@ export type LabWriteup = {
   platform?: string | null;
   difficulty?: string | null;
   category?: string | null;
+  lab_type?: LabWriteupType | null;
   machine_status: LabWriteupMachineStatus;
   visibility: LabWriteupVisibility;
+  is_requestable: boolean;
   public_summary?: string | null;
   public_teaser?: string | null;
+  content_markdown?: string | null;
+  cover_image_url?: string | null;
+  reading_time_minutes?: number | null;
+  published_at?: string | null;
   tools: string[];
   skills: string[];
   tags: string[];
@@ -385,6 +393,19 @@ export type LabWriteup = {
   order_index: number;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type WriteupMedia = {
+  id: string;
+  portfolio_id?: string;
+  writeup_id: string;
+  media_type: 'image';
+  storage_bucket: string;
+  storage_path: string;
+  alt_text?: string | null;
+  caption?: string | null;
+  order_index: number;
+  is_active: boolean;
 };
 
 export type WriteupAccessRequestStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';

@@ -546,3 +546,22 @@ Once this manager is validated, Task 28 will build:
 **Created:** Task 27 - Writeups Manager (Admin UI)
 **Status:** ✅ Complete
 **Next:** Task 28 - Request Access & Approval Workflow
+
+## Task 30.5 Update: Writeups & Labs
+
+The Writeups Manager now supports the public Writeups & Labs consolidation:
+
+- Lab type: `offensive` or `defensive`
+- Explicit requestability: `is_requestable`
+- Full public Markdown: `content_markdown`
+- Cover image URL
+- Reading time estimate
+- Published date
+
+Requestability matters only for `restricted` writeups. When visibility is changed to `public` or `private`, requestability is forced off before saving.
+
+Active labs still cannot be public. Active restricted labs can be requestable only when an admin explicitly enables `is_requestable`; admins must verify that the lab platform permits solution sharing.
+
+Public full writeups are returned only through `get_public_lab_writeup(...)` when the writeup is active, public, not an active machine, and has Markdown content. Catalog RPCs never return Markdown or storage metadata.
+
+Screenshot metadata is stored in `writeup_media`. Public screenshots belong in `writeup-assets`; restricted/private evidence must stay in the private `writeups` bucket. When changing a public writeup to restricted/private, review whether public assets should be removed or moved.

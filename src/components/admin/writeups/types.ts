@@ -5,6 +5,7 @@ export type EditableListItem = {
 
 export type WriteupVisibility = 'public' | 'restricted' | 'private';
 export type WriteupMachineStatus = 'active' | 'retired' | 'other';
+export type WriteupLabType = 'offensive' | 'defensive';
 
 export type WriteupEditorValue = {
   id: string | null;
@@ -14,10 +15,16 @@ export type WriteupEditorValue = {
   platform: string;
   difficulty: string;
   category: string;
+  labType: WriteupLabType | '';
   machineStatus: WriteupMachineStatus;
   visibility: WriteupVisibility;
+  isRequestable: boolean;
   publicSummary: string;
   publicTeaser: string;
+  contentMarkdown: string;
+  coverImageUrl: string;
+  readingTimeMinutes: number | null;
+  publishedAt: string;
   tools: EditableListItem[];
   skills: EditableListItem[];
   tags: EditableListItem[];
@@ -37,10 +44,16 @@ export type WriteupPayload = {
   platform: string;
   difficulty: string;
   category: string;
+  labType: WriteupLabType | '';
   machineStatus: WriteupMachineStatus;
   visibility: WriteupVisibility;
+  isRequestable: boolean;
   publicSummary: string;
   publicTeaser: string;
+  contentMarkdown: string;
+  coverImageUrl: string;
+  readingTimeMinutes: number | null;
+  publishedAt: string;
   tools: string[];
   skills: string[];
   tags: string[];
@@ -62,4 +75,15 @@ export type ProjectOption = {
   id: string;
   title: string;
   slug: string;
+};
+
+export type WriteupMediaEditorValue = {
+  id: string;
+  writeupId: string;
+  storageBucket: string;
+  storagePath: string;
+  altText: string;
+  caption: string;
+  orderIndex: number;
+  isActive: boolean;
 };

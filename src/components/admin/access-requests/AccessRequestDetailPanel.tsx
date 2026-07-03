@@ -239,6 +239,7 @@ export function AccessRequestDetailPanel({
               <ApprovalForm
                 requestId={request.id}
                 writeupTitle={request.writeup_title || "Unknown"}
+                writeupMachineStatus={request.writeup_machine_status ?? undefined}
                 requesterEmail={request.requester_email}
                 onApprove={onApprove}
                 onCancel={() => setActiveForm("none")}

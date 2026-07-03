@@ -28,10 +28,16 @@ type CmsWriteup = {
   platform: string | null;
   difficulty: string | null;
   category: string | null;
+  lab_type: string | null;
   machine_status: string;
   visibility: string;
+  is_requestable: boolean | null;
   public_summary: string | null;
   public_teaser: string | null;
+  content_markdown: string | null;
+  cover_image_url: string | null;
+  reading_time_minutes: number | null;
+  published_at: string | null;
   tools: unknown;
   skills: unknown;
   tags: unknown;
@@ -63,10 +69,16 @@ function normalizeWriteup(writeup: CmsWriteup): WriteupEditorValue {
     platform: writeup.platform ?? '',
     difficulty: writeup.difficulty ?? '',
     category: writeup.category ?? '',
+    labType: (writeup.lab_type ?? '') as 'offensive' | 'defensive' | '',
     machineStatus: (writeup.machine_status ?? 'retired') as 'active' | 'retired' | 'other',
     visibility: (writeup.visibility ?? 'restricted') as 'public' | 'restricted' | 'private',
+    isRequestable: writeup.is_requestable ?? false,
     publicSummary: writeup.public_summary ?? '',
     publicTeaser: writeup.public_teaser ?? '',
+    contentMarkdown: writeup.content_markdown ?? '',
+    coverImageUrl: writeup.cover_image_url ?? '',
+    readingTimeMinutes: writeup.reading_time_minutes ?? null,
+    publishedAt: writeup.published_at ? writeup.published_at.slice(0, 10) : '',
     tools: stringArray(writeup.tools).map((value, index) => ({
       id: `tool-${writeup.id}-${index}`,
       value,

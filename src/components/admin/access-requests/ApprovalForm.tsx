@@ -15,6 +15,7 @@ import type { FlatApproveResult } from "./AccessRequestsManager";
 type ApprovalFormProps = {
   requestId: string;
   writeupTitle: string;
+  writeupMachineStatus?: string;
   requesterEmail: string;
   onApprove: (data: {
     reviewerNote?: string;
@@ -78,6 +79,7 @@ function EmailStatusBadge({ status, warning }: EmailStatusBadgeProps) {
 export function ApprovalForm({
   requestId,
   writeupTitle,
+  writeupMachineStatus,
   requesterEmail,
   onApprove,
   onCancel,
@@ -243,6 +245,18 @@ export function ApprovalForm({
           Requester: <span className="text-cyan-300">{requesterEmail}</span>
         </p>
       </div>
+
+      {writeupMachineStatus === "active" && (
+        <div className="flex items-start gap-2 rounded-md border border-yellow-500/35 bg-yellow-500/10 p-4">
+          <AlertTriangle
+            className="mt-0.5 h-4 w-4 flex-shrink-0 text-yellow-400"
+            strokeWidth={1.8}
+          />
+          <p className="text-xs leading-relaxed text-yellow-300">
+            Only approve active-lab access where the platform or lab rules permit solution sharing.
+          </p>
+        </div>
+      )}
 
       <div>
         <label

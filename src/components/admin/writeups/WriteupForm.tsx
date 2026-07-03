@@ -1,4 +1,4 @@
-import { Save, X } from 'lucide-react';
+import { AlertTriangle, Save, X } from 'lucide-react';
 import type { WriteupEditorValue, ProjectOption } from './types';
 import { WriteupArrayFields } from './WriteupArrayFields';
 
@@ -28,6 +28,14 @@ export function WriteupForm({ disabled, writeup, mode, onCancel, onChange, onSav
       title,
       // Auto-generate slug from title if in create mode and slug is empty
       slug: mode === 'create' && !writeup.slug ? generateSlugFromTitle(title) : writeup.slug,
+    });
+  };
+
+  const handleVisibilityChange = (visibility: 'public' | 'restricted' | 'private') => {
+    onChange({
+      ...writeup,
+      visibility,
+      isRequestable: visibility === 'restricted' ? writeup.isRequestable : false,
     });
   };
 
@@ -145,6 +153,26 @@ export function WriteupForm({ disabled, writeup, mode, onCancel, onChange, onSav
               />
             </div>
           </div>
+
+          <div>
+            <label htmlFor="writeup-lab-type" className="mb-2 block font-mono text-xs text-cyan-400">
+              Lab Type
+            </label>
+            <select
+              id="writeup-lab-type"
+              disabled={disabled}
+              value={writeup.labType}
+              onChange={(e) => onChange({ ...writeup, labType: e.target.value as 'offensive' | 'defensive' | '' })}
+              className="w-full border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">-- Select classification --</option>
+              <option value="offensive">Offensive</option>
+              <option value="defensive">Defensive</option>
+            </select>
+            <p className="mt-1 font-mono text-[10px] text-gray-600">
+              Required for publicly listed Violet labs. Use the dominant purpose of the lab, not every tool mentioned.
+            </p>
+          </div>
         </section>
 
         {/* Safety & Visibility Section */}
@@ -179,12 +207,12 @@ export function WriteupForm({ disabled, writeup, mode, onCancel, onChange, onSav
                 Visibility <span className="text-[#ff5f56]">*</span>
               </label>
               <select
-                id="writeup-visibility"
-                disabled={disabled}
-                value={writeup.visibility}
-                onChange={(e) => onChange({ ...writeup, visibility: e.target.value as 'public' | 'restricted' | 'private' })}
-                className="w-full border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              id="writeup-visibility"
+              disabled={disabled}
+              value={writeup.visibility}
+              onChange={(e) => handleVisibilityChange(e.target.value as 'public' | 'restricted' | 'private')}
+              className="w-full border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
                 <option value="public">Public</option>
                 <option value="restricted">Restricted</option>
                 <option value="private">Private</option>
@@ -200,6 +228,28 @@ export function WriteupForm({ disabled, writeup, mode, onCancel, onChange, onSav
           {writeup.machineStatus === 'active' && writeup.visibility === 'public' && (
             <div className="border border-[#ff5f56]/35 bg-[#ff5f56]/10 px-3 py-2 font-mono text-xs text-[#ff5f56]">
               ⚠️ Security Warning: Active machines cannot have public visibility. Change status to "retired" or visibility to "restricted" or "private".
+            </div>
+          )}
+
+          {writeup.visibility === 'restricted' && (
+            <div className="space-y-3 border border-[#ffbd2e]/25 bg-[#ffbd2e]/5 p-3">
+              <label className="flex cursor-pointer items-center gap-2 font-mono text-xs text-[#ffbd2e]">
+                <input
+                  type="checkbox"
+                  disabled={disabled}
+                  checked={writeup.isRequestable}
+                  onChange={(e) => onChange({ ...writeup, isRequestable: e.target.checked })}
+                  className="h-4 w-4 accent-[#ffbd2e]"
+                />
+                Is requestable from the public portfolio
+              </label>
+              <div className="flex items-start gap-2 font-mono text-[10px] leading-relaxed text-[#ffdc8a]">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                <p>
+                  Only approve active-lab access where the platform or lab rules permit solution sharing.
+                  Active labs default to not requestable until this is explicitly enabled.
+                </p>
+              </div>
             </div>
           )}
 
@@ -255,6 +305,79 @@ export function WriteupForm({ disabled, writeup, mode, onCancel, onChange, onSav
             />
             <p className="mt-1 font-mono text-[10px] text-gray-600">{writeup.publicSummary.length} / 1200 characters</p>
           </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <label htmlFor="writeup-reading-time" className="mb-2 block font-mono text-xs text-cyan-400">
+                Reading Time
+              </label>
+              <input
+                id="writeup-reading-time"
+                type="number"
+                disabled={disabled}
+                value={writeup.readingTimeMinutes ?? ''}
+                onChange={(e) => onChange({ ...writeup, readingTimeMinutes: e.target.value ? parseInt(e.target.value, 10) : null })}
+                min={1}
+                max={300}
+                className="w-full border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="writeup-published-at" className="mb-2 block font-mono text-xs text-cyan-400">
+                Published Date
+              </label>
+              <input
+                id="writeup-published-at"
+                type="date"
+                disabled={disabled}
+                value={writeup.publishedAt}
+                onChange={(e) => onChange({ ...writeup, publishedAt: e.target.value })}
+                className="w-full border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="writeup-cover-image" className="mb-2 block font-mono text-xs text-cyan-400">
+                Cover Image URL
+              </label>
+              <input
+                id="writeup-cover-image"
+                type="url"
+                disabled={disabled}
+                value={writeup.coverImageUrl}
+                onChange={(e) => onChange({ ...writeup, coverImageUrl: e.target.value })}
+                placeholder="https://..."
+                maxLength={500}
+                className="w-full border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 placeholder-gray-600 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="writeup-markdown" className="mb-2 block font-mono text-xs text-cyan-400">
+              Full Markdown Content
+            </label>
+            <textarea
+              id="writeup-markdown"
+              disabled={disabled}
+              value={writeup.contentMarkdown}
+              onChange={(e) => onChange({ ...writeup, contentMarkdown: e.target.value })}
+              placeholder="Add full Markdown only for retired public labs where publication is safe."
+              maxLength={100000}
+              rows={12}
+              className="w-full resize-y border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs leading-6 text-gray-200 placeholder-gray-600 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <p className="mt-1 font-mono text-[10px] text-gray-600">
+              {writeup.contentMarkdown.length} / 100000 characters. This is returned publicly only for public, non-active writeups.
+            </p>
+          </div>
+
+          {writeup.visibility === 'public' && writeup.machineStatus === 'active' && (
+            <div className="border border-[#ff5f56]/35 bg-[#ff5f56]/10 px-3 py-2 font-mono text-xs text-[#ffb4ad]">
+              Public full content is blocked while this lab is active.
+            </div>
+          )}
         </section>
 
         {/* Tools, Skills, Tags Section */}

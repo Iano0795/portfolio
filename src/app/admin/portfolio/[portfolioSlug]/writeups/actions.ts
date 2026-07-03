@@ -12,10 +12,16 @@ type WriteupInput = {
   platform: string | null;
   difficulty: string | null;
   category: string | null;
+  lab_type: string | null;
   machine_status: string;
   visibility: string;
+  is_requestable: boolean;
   public_summary: string | null;
   public_teaser: string | null;
+  content_markdown: string | null;
+  cover_image_url: string | null;
+  reading_time_minutes: number | null;
+  published_at: string | null;
   tools: string[];
   skills: string[];
   tags: string[];
@@ -73,6 +79,8 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
   validateMax(payload.category, 'Category', 120, errors);
   validateMax(payload.publicSummary, 'Public summary', 1200, errors);
   validateMax(payload.publicTeaser, 'Public teaser', 600, errors);
+  validateMax(payload.contentMarkdown, 'Full Markdown content', 100000, errors);
+  validateMax(payload.coverImageUrl, 'Cover image URL', 500, errors);
   validateMax(payload.storageBucket, 'Storage bucket', 120, errors);
   validateMax(payload.storagePath, 'Storage path', 500, errors);
   validateMax(payload.fileName, 'File name', 240, errors);
@@ -81,6 +89,36 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
   // Security validation: active machines cannot be public
   if (payload.machineStatus === 'active' && payload.visibility === 'public') {
     errors.push('Active machines cannot have public visibility. Set status to "retired" or visibility to "restricted" or "private".');
+  }
+
+  if (payload.labType && !['offensive', 'defensive'].includes(payload.labType)) {
+    errors.push('Invalid lab type value.');
+  }
+
+  if (payload.visibility === 'public' && payload.machineStatus === 'active') {
+    errors.push('Public active labs are blocked. Retire the lab before publishing public content.');
+  }
+
+  if (payload.visibility === 'public' && payload.contentMarkdown.trim() && payload.machineStatus === 'active') {
+    errors.push('Full public Markdown content requires a retired or non-active lab.');
+  }
+
+  if (payload.readingTimeMinutes !== null) {
+    if (!Number.isInteger(payload.readingTimeMinutes) || payload.readingTimeMinutes < 1 || payload.readingTimeMinutes > 300) {
+      errors.push('Reading time must be between 1 and 300 minutes.');
+    }
+  }
+
+  const coverImageUrl = cleanString(payload.coverImageUrl);
+  if (coverImageUrl) {
+    try {
+      const url = new URL(coverImageUrl);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        errors.push('Cover image URL must use http or https.');
+      }
+    } catch {
+      errors.push('Cover image URL must be a valid URL.');
+    }
   }
 
   // Validate visibility values
@@ -136,10 +174,16 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
     platform: nullableText(payload.platform),
     difficulty: nullableText(payload.difficulty),
     category: nullableText(payload.category),
+    lab_type: payload.labType || null,
     machine_status: payload.machineStatus,
     visibility: payload.visibility,
+    is_requestable: payload.visibility === 'restricted' ? payload.isRequestable : false,
     public_summary: nullableText(payload.publicSummary),
     public_teaser: nullableText(payload.publicTeaser),
+    content_markdown: nullableText(payload.contentMarkdown),
+    cover_image_url: coverImageUrl || null,
+    reading_time_minutes: payload.readingTimeMinutes,
+    published_at: nullableText(payload.publishedAt),
     tools,
     skills,
     tags,
