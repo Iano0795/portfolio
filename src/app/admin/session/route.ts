@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { ADMIN_ACCESS_DENIED_MESSAGE } from '@/lib/auth/constants';
 import { getUserPortfoliosForAccessToken } from '@/lib/auth/portfolio-access';
-import { clearAdminSessionCookies, setAdminSessionCookies } from '@/lib/auth/admin-session';
+import {
+  clearAdminSessionCookies,
+  createAdminSupabaseClient,
+  setAdminSessionCookies,
+} from '@/lib/auth/admin-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,10 +24,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing Supabase session tokens.' }, { status: 400 });
   }
 
-  const portfolios = await getUserPortfoliosForAccessToken(body.accessToken).catch(() => []);
+  const supabase = await createAdminSupabaseClient(body.accessToken);
+  const { data: authData, error: authError } = await supabase.auth.getUser(body.accessToken);
+
+  if (authError || !authData.user) {
+    await clearAdminSessionCookies();
+    console.warn('[admin/session] rejected invalid Supabase session', {
+      error: authError?.message ?? 'missing user',
+    });
+
+    return NextResponse.json({ error: 'Invalid or expired Supabase session.' }, { status: 401 });
+  }
+
+  const portfolios = await getUserPortfoliosForAccessToken(body.accessToken).catch((error) => {
+    console.warn('[admin/session] portfolio access lookup failed', {
+      userId: authData.user.id,
+      email: authData.user.email,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return [];
+  });
 
   if (portfolios.length === 0) {
     await clearAdminSessionCookies();
+    console.warn('[admin/session] access denied: no active portfolio membership', {
+      userId: authData.user.id,
+      email: authData.user.email,
+    });
 
     return NextResponse.json({ error: ADMIN_ACCESS_DENIED_MESSAGE }, { status: 403 });
   }
