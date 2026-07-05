@@ -20,12 +20,15 @@ import {
   getProcessSteps,
   getProfile,
   getProjects,
+  getPublicLabWriteupBySlug,
+  getPublicLabWriteups,
   getSiteSettings,
   getSkills,
   type CmsCapability,
   type CmsContactLink,
   type CmsCredential,
   type CmsExperience,
+  type CmsLabWriteup,
   type CmsNavigationItem,
   type CmsProcessStep,
   type CmsProfile,
@@ -43,6 +46,10 @@ import type {
   ExperienceData,
   ExperienceEntry,
   LabelValue,
+  LabWriteup,
+  LabWriteupMachineStatus,
+  LabWriteupType,
+  LabWriteupVisibility,
   NavigationData,
   NavigationIconName,
   NavigationItem,
@@ -60,11 +67,23 @@ import type {
   SiteConfig,
   SkillGroup,
   SkillsData,
+  WriteupsData,
 } from '@/types/portfolio';
 
 type JsonObject = Record<string, unknown>;
 
-const validSectionIds: SectionId[] = ['profile', 'about', 'capabilities', 'skills', 'projects', 'credentials', 'process', 'experience', 'contact'];
+const validSectionIds: SectionId[] = [
+  'profile',
+  'about',
+  'capabilities',
+  'skills',
+  'projects',
+  'writeups',
+  'credentials',
+  'process',
+  'experience',
+  'contact',
+];
 const validNavigationIcons: NavigationIconName[] = ['user', 'file-text', 'network', 'shield', 'award', 'cpu', 'folder-git', 'git-branch', 'briefcase', 'send'];
 const validProjectCategories: ProjectCategory[] = ['Enterprise Platforms', 'DXP/DWS', 'Integrations', 'Security'];
 
@@ -161,6 +180,23 @@ export async function getSupabaseProjectsData(options?: PortfolioQueryOptions): 
   return normalizeProjectsData(projects, portfolio);
 }
 
+export async function getSupabaseWriteupsData(options?: PortfolioQueryOptions): Promise<WriteupsData> {
+  const portfolio = await resolvePortfolio(options);
+  const writeups = await getPublicLabWriteups(options);
+
+  return normalizeWriteupsData(writeups, portfolio);
+}
+
+export async function getSupabasePublicWriteupData(
+  slug: string,
+  options?: PortfolioQueryOptions,
+): Promise<LabWriteup | null> {
+  await resolvePortfolio(options);
+  const writeup = await getPublicLabWriteupBySlug(slug, options);
+
+  return writeup ? normalizeLabWriteup(writeup) : null;
+}
+
 export async function getSupabaseSkillsData(options?: PortfolioQueryOptions): Promise<SkillsData> {
   const portfolio = await resolvePortfolio(options);
   const skills = await getSkills(options);
@@ -220,13 +256,14 @@ export async function getSupabaseCredentialsData(options?: PortfolioQueryOptions
 
 export async function getSupabasePortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {
   const portfolio = await resolvePortfolio(options);
-  const [site, navigation, console, profile, projects, skills, experience, capabilities, process, contact, resume, credentials] =
+  const [site, navigation, console, profile, projects, writeups, skills, experience, capabilities, process, contact, resume, credentials] =
     await Promise.all([
       getSupabaseSiteConfigData(options),
       getSupabaseNavigationData(options),
       getSupabaseConsoleData(options),
       getSupabaseProfileData(options),
       getSupabaseProjectsData(options),
+      getSupabaseWriteupsData(options),
       getSupabaseSkillsData(options),
       getSupabaseExperienceData(options),
       getSupabaseCapabilitiesData(options),
@@ -244,6 +281,7 @@ export async function getSupabasePortfolioData(options?: PortfolioQueryOptions):
     profile,
     about: aboutData,
     projects,
+    writeups,
     skills,
     experience,
     capabilities,
@@ -251,6 +289,41 @@ export async function getSupabasePortfolioData(options?: PortfolioQueryOptions):
     contact,
     resume,
     credentials,
+  };
+}
+
+function normalizeLabWriteup(row: CmsLabWriteup): LabWriteup {
+  return {
+    id: row.id,
+    portfolio_id: row.portfolio_id,
+    project_id: row.project_id,
+    title: row.title,
+    slug: row.slug,
+    platform: row.platform,
+    difficulty: row.difficulty,
+    category: row.category,
+    lab_type: row.lab_type as LabWriteupType | null,
+    machine_status: row.machine_status as LabWriteupMachineStatus,
+    visibility: row.visibility as LabWriteupVisibility,
+    is_requestable: row.is_requestable ?? false,
+    public_summary: row.public_summary,
+    public_teaser: row.public_teaser,
+    content_markdown: row.content_markdown,
+    cover_image_url: row.cover_image_url,
+    reading_time_minutes: row.reading_time_minutes,
+    published_at: row.published_at,
+    tools: isStringArray(row.tools) ? row.tools : [],
+    skills: isStringArray(row.skills) ? row.skills : [],
+    tags: isStringArray(row.tags) ? row.tags : [],
+    storage_bucket: row.storage_bucket,
+    storage_path: row.storage_path,
+    file_name: row.file_name,
+    file_type: row.file_type,
+    is_featured: row.is_featured ?? false,
+    is_active: row.is_active ?? true,
+    order_index: row.order_index ?? 0,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   };
 }
 
@@ -431,6 +504,19 @@ function normalizeProjectsData(rows: CmsProject[], portfolio: Portfolio | null):
   return {
     ...projectsData,
     projects,
+  };
+}
+
+function normalizeWriteupsData(rows: CmsLabWriteup[], portfolio: Portfolio | null): WriteupsData {
+  return {
+    eyebrow: 'writeups/ / lab evidence',
+    heading: 'Security writeups with reproducible notes.',
+    intro: isDefaultPortfolio(portfolio)
+      ? 'Retired-machine walkthroughs, analysis notes, and public-safe lab documentation.'
+      : 'Public lab writeups from this portfolio.',
+    indexLabel: 'Writeup Index',
+    emptyLabel: 'No public writeups have been published yet.',
+    writeups: rows.map(normalizeLabWriteup),
   };
 }
 

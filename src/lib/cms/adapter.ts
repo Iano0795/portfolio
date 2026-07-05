@@ -6,12 +6,14 @@ import {
   getLocalExperienceData,
   getLocalNavigationData,
   getLocalPortfolioData,
+  getLocalPublicWriteupData,
   getLocalProcessData,
   getLocalProfileData,
   getLocalProjectsData,
   getLocalResumeData,
   getLocalSiteConfigData,
   getLocalSkillsData,
+  getLocalWriteupsData,
 } from '@/lib/cms/local-adapter';
 import {
   getSupabaseCapabilitiesData,
@@ -20,12 +22,14 @@ import {
   getSupabaseExperienceData,
   getSupabaseNavigationData,
   getSupabasePortfolioData,
+  getSupabasePublicWriteupData,
   getSupabaseProcessData,
   getSupabaseProfileData,
   getSupabaseProjectsData,
   getSupabaseResumeData,
   getSupabaseSiteConfigData,
   getSupabaseSkillsData,
+  getSupabaseWriteupsData,
 } from '@/lib/cms/supabase-adapter';
 import type {
   CapabilitiesData,
@@ -41,6 +45,7 @@ import type {
   ResumeData,
   SiteConfig,
   SkillsData,
+  WriteupsData,
 } from '@/types/portfolio';
 
 function warnSupabaseFallback(scope: string, error: unknown) {
@@ -75,6 +80,18 @@ export async function getProfileData(options?: PortfolioQueryOptions): Promise<P
 
 export async function getProjectsData(options?: PortfolioQueryOptions): Promise<ProjectsData> {
   return withContentSource('projects', () => getLocalProjectsData(options), () => getSupabaseProjectsData(options));
+}
+
+export async function getWriteupsData(options?: PortfolioQueryOptions): Promise<WriteupsData> {
+  return withContentSource('writeups', () => getLocalWriteupsData(options), () => getSupabaseWriteupsData(options));
+}
+
+export async function getPublicWriteupData(slug: string, options?: PortfolioQueryOptions) {
+  return withContentSource(
+    `writeup ${slug}`,
+    () => getLocalPublicWriteupData(slug, options),
+    () => getSupabasePublicWriteupData(slug, options),
+  );
 }
 
 export async function getSkillsData(options?: PortfolioQueryOptions): Promise<SkillsData> {

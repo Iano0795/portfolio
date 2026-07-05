@@ -11,6 +11,7 @@ import { ProcessSection } from '@/components/sections/ProcessSection';
 import { ProfileSection } from '@/components/sections/ProfileSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { SkillsSection } from '@/components/sections/SkillsSection';
+import { WriteupsSection } from '@/components/sections/WriteupsSection';
 import { MainPanel } from './MainPanel';
 import { MobileNavigation } from './MobileNavigation';
 import { Sidebar } from './Sidebar';
@@ -67,6 +68,14 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const hashSection = window.location.hash.replace('#', '') as SectionId;
+
+    if (sections.some((section) => section.id === hashSection)) {
+      setActiveSection(hashSection);
+    }
+  }, [sections]);
+
   const handleSectionChange = (section: SectionId, output?: string) => {
     if (output) {
       setConsoleOutput(output);
@@ -75,6 +84,8 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
     if (section === activeSection) {
       return;
     }
+
+    window.history.replaceState(null, '', `#${section}`);
 
     const nextModule = sections.find((item) => item.id === section)?.module ?? section;
     setTransitioning(true);
@@ -162,6 +173,8 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
         return <SkillsSection data={portfolioData.skills} />;
       case 'projects':
         return <ProjectsSection data={portfolioData.projects} />;
+      case 'writeups':
+        return <WriteupsSection data={portfolioData.writeups} />;
       case 'process':
         return <ProcessSection data={portfolioData.process} />;
       case 'experience':

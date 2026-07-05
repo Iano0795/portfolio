@@ -44,6 +44,7 @@ type CmsWriteup = {
   tools: unknown;
   skills: unknown;
   tags: unknown;
+  github_exploits: unknown;
   storage_bucket: string | null;
   storage_path: string | null;
   file_name: string | null;
@@ -61,6 +62,22 @@ type CmsProject = {
 
 function stringArray(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function normalizeGithubExploits(value: unknown, writeupId: string) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+    .map((item, index) => ({
+      id: `github-exploit-${writeupId}-${index}`,
+      label: typeof item.label === 'string' ? item.label : '',
+      url: typeof item.url === 'string' ? item.url : '',
+      description: typeof item.description === 'string' ? item.description : '',
+    }))
+    .filter((item) => item.label || item.url || item.description);
 }
 
 function normalizeWriteup(writeup: CmsWriteup): WriteupEditorValue {
@@ -94,6 +111,7 @@ function normalizeWriteup(writeup: CmsWriteup): WriteupEditorValue {
       id: `tag-${writeup.id}-${index}`,
       value,
     })),
+    githubExploits: normalizeGithubExploits(writeup.github_exploits, writeup.id),
     storageBucket: writeup.storage_bucket ?? '',
     storagePath: writeup.storage_path ?? '',
     fileName: writeup.file_name ?? '',

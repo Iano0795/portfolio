@@ -259,6 +259,15 @@ export type ProjectsData = {
   projects: Project[];
 };
 
+export type WriteupsData = {
+  eyebrow: string;
+  heading: string;
+  intro: string;
+  indexLabel: string;
+  emptyLabel: string;
+  writeups: LabWriteup[];
+};
+
 export type ProcessStep = {
   title: string;
   order: number;
@@ -477,6 +486,7 @@ export type PortfolioData = {
   profile: ProfileData;
   about: AboutData;
   projects: ProjectsData;
+  writeups: WriteupsData;
   skills: SkillsData;
   experience: ExperienceData;
   capabilities: CapabilitiesData;

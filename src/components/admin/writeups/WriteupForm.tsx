@@ -1,11 +1,12 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { AlertTriangle, ChevronDown, ChevronRight, FileText, Save, Trash2, Upload, X } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronRight, FileText, Plus, Save, Trash2, Upload, X } from 'lucide-react';
 import type { WriteupEditorValue, ProjectOption } from './types';
 import { WriteupArrayFields } from './WriteupArrayFields';
 
 export type ExtractedDraft = {
   markdown: string;
   warning: string | null;
+  applied?: boolean;
 };
 
 type WriteupFormProps = {
@@ -123,6 +124,41 @@ export function WriteupForm({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const addGithubExploit = () => {
+    onChange({
+      ...writeup,
+      githubExploits: [
+        ...writeup.githubExploits,
+        {
+          id: crypto.randomUUID(),
+          label: '',
+          url: '',
+          description: '',
+        },
+      ],
+    });
+  };
+
+  const updateGithubExploit = (
+    exploitId: string,
+    field: 'label' | 'url' | 'description',
+    value: string,
+  ) => {
+    onChange({
+      ...writeup,
+      githubExploits: writeup.githubExploits.map((item) =>
+        item.id === exploitId ? { ...item, [field]: value } : item,
+      ),
+    });
+  };
+
+  const removeGithubExploit = (exploitId: string) => {
+    onChange({
+      ...writeup,
+      githubExploits: writeup.githubExploits.filter((item) => item.id !== exploitId),
+    });
   };
 
   const hasFile = Boolean(writeup.storagePath);
@@ -414,7 +450,7 @@ export function WriteupForm({
             <div className="space-y-2 border border-[#00ff88]/30 bg-[#00ff88]/5 p-3">
               <p className="font-mono text-[10px] leading-relaxed text-[#00ff88]">
                 Content extracted from the uploaded document ({extractedDraft.markdown.length.toLocaleString()} characters) is
-                ready to use.
+                {extractedDraft.applied ? ' applied to the editor.' : ' ready to use.'}
               </p>
               {extractedDraft.warning ? (
                 <p className="font-mono text-[10px] leading-relaxed text-[#ffdc8a]">{extractedDraft.warning}</p>
@@ -426,7 +462,7 @@ export function WriteupForm({
                   onClick={onApplyExtracted}
                   className="border border-[#00ff88]/45 bg-[#00ff88]/10 px-3 py-1.5 font-mono text-[10px] text-[#00ff88] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Replace Markdown content
+                  {extractedDraft.applied ? 'Reapply Markdown content' : 'Replace Markdown content'}
                 </button>
                 <button
                   type="button"
@@ -547,6 +583,96 @@ export function WriteupForm({
               Public full content is blocked while this lab is active.
             </div>
           )}
+        </Section>
+
+        <Section
+          title="GitHub Exploits"
+          badge={writeup.githubExploits.length > 0 ? `${writeup.githubExploits.length} linked` : null}
+        >
+          <p className="font-mono text-[10px] leading-relaxed text-gray-500">
+            Add exploit scripts, PoCs, or Gists you want highlighted in the public writeup sidebar. GitHub and Gist links found
+            in the Markdown will still be shown automatically.
+          </p>
+
+          <div className="space-y-4">
+            {writeup.githubExploits.map((exploit, index) => (
+              <div className="border border-cyan-400/20 bg-[#050812]/60 p-3" key={exploit.id}>
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-400">Exploit {index + 1}</p>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => removeGithubExploit(exploit.id)}
+                    className="inline-flex items-center gap-1.5 border border-[#ff5f56]/35 bg-[#ff5f56]/10 px-2 py-1 font-mono text-[10px] text-[#ffb4ad] transition-all hover:bg-[#ff5f56]/18 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3 w-3" aria-hidden="true" />
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <label htmlFor={`writeup-exploit-label-${exploit.id}`} className={labelClasses}>
+                      Title
+                    </label>
+                    <input
+                      id={`writeup-exploit-label-${exploit.id}`}
+                      type="text"
+                      disabled={disabled}
+                      value={exploit.label}
+                      onChange={(e) => updateGithubExploit(exploit.id, 'label', e.target.value)}
+                      placeholder="Foothold exploit script"
+                      maxLength={120}
+                      className={inputClasses}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor={`writeup-exploit-url-${exploit.id}`} className={labelClasses}>
+                      GitHub or Gist URL
+                    </label>
+                    <input
+                      id={`writeup-exploit-url-${exploit.id}`}
+                      type="url"
+                      disabled={disabled}
+                      value={exploit.url}
+                      onChange={(e) => updateGithubExploit(exploit.id, 'url', e.target.value)}
+                      placeholder="https://github.com/user/repo/blob/main/exploit.py"
+                      maxLength={500}
+                      className={inputClasses}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <label htmlFor={`writeup-exploit-description-${exploit.id}`} className={labelClasses}>
+                    Note
+                  </label>
+                  <textarea
+                    id={`writeup-exploit-description-${exploit.id}`}
+                    disabled={disabled}
+                    value={exploit.description}
+                    onChange={(e) => updateGithubExploit(exploit.id, 'description', e.target.value)}
+                    placeholder="Short context for what this exploit demonstrates."
+                    maxLength={300}
+                    rows={2}
+                    className={`${inputClasses} resize-none`}
+                  />
+                  <p className={hintClasses}>{exploit.description.length} / 300 characters</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={addGithubExploit}
+            className="inline-flex items-center gap-2 border border-cyan-400/45 bg-cyan-400/10 px-3 py-2 font-mono text-xs text-cyan-300 transition-all hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            Add Exploit Link
+          </button>
         </Section>
 
         <Section
