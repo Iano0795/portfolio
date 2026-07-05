@@ -57,6 +57,11 @@ type WriteupInput = {
   tools: string[];
   skills: string[];
   tags: string[];
+  github_exploits: Array<{
+    label: string;
+    url: string;
+    description?: string;
+  }>;
   storage_bucket: string | null;
   storage_path: string | null;
   file_name: string | null;
@@ -335,6 +340,16 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
     ? payload.tags.map((value) => cleanString(value)).filter(Boolean)
     : [];
 
+  const githubExploits = Array.isArray(payload.githubExploits)
+    ? payload.githubExploits
+        .map((item) => ({
+          label: cleanString(item.label),
+          url: cleanString(item.url),
+          description: item.description ? cleanString(item.description) : '',
+        }))
+        .filter((item) => item.label || item.url || item.description)
+    : [];
+
   tools.forEach((tool, index) => {
     if (tool.length > 80) {
       errors.push(`Tool ${index + 1} must be 80 characters or fewer.`);
@@ -350,6 +365,45 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
   tags.forEach((tag, index) => {
     if (tag.length > 80) {
       errors.push(`Tag ${index + 1} must be 80 characters or fewer.`);
+    }
+  });
+
+  if (githubExploits.length > 20) {
+    errors.push('GitHub exploits must contain 20 links or fewer.');
+  }
+
+  githubExploits.forEach((exploit, index) => {
+    if (!exploit.url) {
+      errors.push(`GitHub exploit ${index + 1} requires a URL.`);
+    }
+
+    if (exploit.label.length > 120) {
+      errors.push(`GitHub exploit ${index + 1} title must be 120 characters or fewer.`);
+    }
+
+    if (exploit.url.length > 500) {
+      errors.push(`GitHub exploit ${index + 1} URL must be 500 characters or fewer.`);
+    }
+
+    if (exploit.description.length > 300) {
+      errors.push(`GitHub exploit ${index + 1} note must be 300 characters or fewer.`);
+    }
+
+    if (exploit.url) {
+      try {
+        const url = new URL(exploit.url);
+        const hostname = url.hostname.replace(/^www\./, '');
+
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          errors.push(`GitHub exploit ${index + 1} URL must use http or https.`);
+        }
+
+        if (hostname !== 'github.com' && hostname !== 'gist.github.com') {
+          errors.push(`GitHub exploit ${index + 1} must be a github.com or gist.github.com URL.`);
+        }
+      } catch {
+        errors.push(`GitHub exploit ${index + 1} URL must be valid.`);
+      }
     }
   });
 
@@ -381,6 +435,11 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
     tools,
     skills,
     tags,
+    github_exploits: githubExploits.map((exploit) => ({
+      label: exploit.label || 'GitHub Exploit',
+      url: exploit.url,
+      ...(exploit.description ? { description: exploit.description } : {}),
+    })),
     storage_bucket: nullableText(payload.storageBucket),
     storage_path: nullableText(payload.storagePath),
     file_name: nullableText(payload.fileName),

@@ -9,6 +9,7 @@ import { WriteupsList } from './WriteupsList';
 import { WriteupPreviewCard } from './WriteupPreviewCard';
 import type {
   EditableListItem,
+  GithubExploitEditorItem,
   WriteupEditorValue,
   WriteupFileUploadResult,
   WriteupMutationResult,
@@ -41,6 +42,15 @@ function createItem(value: string): EditableListItem {
   };
 }
 
+function createExploitItem(value?: Partial<GithubExploitEditorItem>): GithubExploitEditorItem {
+  return {
+    id: crypto.randomUUID(),
+    label: value?.label ?? '',
+    url: value?.url ?? '',
+    description: value?.description ?? '',
+  };
+}
+
 function sortedWriteups(writeups: WriteupEditorValue[]) {
   return [...writeups].sort((a, b) => a.orderIndex - b.orderIndex || a.title.localeCompare(b.title));
 }
@@ -67,6 +77,7 @@ function createDraftWriteup(nextOrderIndex: number): WriteupEditorValue {
     tools: [],
     skills: [],
     tags: [],
+    githubExploits: [],
     storageBucket: '',
     storagePath: '',
     fileName: '',
@@ -98,6 +109,13 @@ function writeupToPayload(writeup: WriteupEditorValue): WriteupPayload {
     tools: writeup.tools.map((item) => item.value),
     skills: writeup.skills.map((item) => item.value),
     tags: writeup.tags.map((item) => item.value),
+    githubExploits: writeup.githubExploits
+      .map((item) => ({
+        label: item.label,
+        url: item.url,
+        description: item.description,
+      }))
+      .filter((item) => item.label.trim() || item.url.trim() || item.description.trim()),
     storageBucket: writeup.storageBucket,
     storagePath: writeup.storagePath,
     fileName: writeup.fileName,
@@ -114,6 +132,7 @@ function cloneWriteup(writeup: WriteupEditorValue): WriteupEditorValue {
     tools: writeup.tools.map((item) => createItem(item.value)),
     skills: writeup.skills.map((item) => createItem(item.value)),
     tags: writeup.tags.map((item) => createItem(item.value)),
+    githubExploits: writeup.githubExploits.map((item) => createExploitItem(item)),
   };
 }
 
@@ -213,9 +232,15 @@ export function WriteupsManager({
         return;
       }
 
-      if (result.file) {
+      if (result.file || result.extractedMarkdown) {
         setEditingWriteup((current) =>
-          current && current.id === writeupId ? { ...current, ...result.file } : current,
+          current && current.id === writeupId
+            ? {
+                ...current,
+                ...(result.file ?? {}),
+                ...(result.extractedMarkdown ? { contentMarkdown: result.extractedMarkdown } : {}),
+              }
+            : current,
         );
       }
 
@@ -223,6 +248,7 @@ export function WriteupsManager({
         setExtractedDraft({
           markdown: result.extractedMarkdown,
           warning: result.extractionWarning ?? null,
+          applied: true,
         });
       } else {
         setExtractedDraft(null);
@@ -231,7 +257,9 @@ export function WriteupsManager({
       setUploadMessage({
         success: result.extractionWarning
           ? `${result.success} ${result.extractionWarning}`
-          : result.success,
+          : result.extractedMarkdown
+            ? `${result.success} Extracted content was applied to the editor.`
+            : result.success,
       });
       router.refresh();
     } catch (error) {

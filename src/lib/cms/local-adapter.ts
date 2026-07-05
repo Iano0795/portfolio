@@ -25,6 +25,7 @@ import type {
   ResumeData,
   SiteConfig,
   SkillsData,
+  WriteupsData,
 } from '@/types/portfolio';
 
 const DEFAULT_PORTFOLIO_SLUG = 'ian';
@@ -150,6 +151,17 @@ export async function getLocalProjectsData(options?: PortfolioQueryOptions): Pro
   return projectsData;
 }
 
+export async function getLocalWriteupsData(_options?: PortfolioQueryOptions): Promise<WriteupsData> {
+  return {
+    eyebrow: 'writeups/ / lab evidence',
+    heading: 'Security writeups with reproducible notes.',
+    intro: 'Retired-machine walkthroughs, analysis notes, and public-safe lab documentation.',
+    indexLabel: 'Writeup Index',
+    emptyLabel: 'No public writeups have been published yet.',
+    writeups: [],
+  };
+}
+
 export async function getLocalSkillsData(options?: PortfolioQueryOptions): Promise<SkillsData> {
   if (!isIanPortfolio(options)) {
     return {
@@ -215,8 +227,12 @@ export async function getLocalCredentialsData(_options?: PortfolioQueryOptions):
   return [];
 }
 
+export async function getLocalPublicWriteupData(_slug: string, _options?: PortfolioQueryOptions) {
+  return null;
+}
+
 export async function getLocalPortfolioData(options?: PortfolioQueryOptions): Promise<PortfolioData> {
-  const [portfolio, site, navigation, console, profile, about, projects, skills, experience, capabilities, process, contact, resume, credentials] =
+  const [portfolio, site, navigation, console, profile, about, projects, writeups, skills, experience, capabilities, process, contact, resume, credentials] =
     await Promise.all([
       getLocalPortfolio(options),
       getLocalSiteConfigData(options),
@@ -225,6 +241,7 @@ export async function getLocalPortfolioData(options?: PortfolioQueryOptions): Pr
       getLocalProfileData(options),
       getLocalAboutData(options),
       getLocalProjectsData(options),
+      getLocalWriteupsData(options),
       getLocalSkillsData(options),
       getLocalExperienceData(options),
       getLocalCapabilitiesData(options),
@@ -242,6 +259,7 @@ export async function getLocalPortfolioData(options?: PortfolioQueryOptions): Pr
     profile,
     about,
     projects,
+    writeups,
     skills,
     experience,
     capabilities,

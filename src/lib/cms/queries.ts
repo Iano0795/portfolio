@@ -178,10 +178,16 @@ export type CmsLabWriteup = {
   platform: string | null;
   difficulty: string | null;
   category: string | null;
+  lab_type: string | null;
   machine_status: string;
   visibility: string;
+  is_requestable: boolean | null;
   public_summary: string | null;
   public_teaser: string | null;
+  content_markdown: string | null;
+  cover_image_url: string | null;
+  reading_time_minutes: number | null;
+  published_at: string | null;
   tools: JsonValue;
   skills: JsonValue;
   tags: JsonValue;
@@ -638,8 +644,38 @@ export async function getPublicLabWriteups(options?: PortfolioQueryOptions): Pro
       .eq('portfolio_id', portfolioId)
       .eq('is_active', true)
       .eq('visibility', 'public')
+      .neq('machine_status', 'active')
       .order('order_index', { ascending: true })
       .order('created_at', { ascending: false }),
+  );
+}
+
+/**
+ * Get a public full writeup by slug.
+ * Only retired/non-active public writeups are returned for anonymous readers.
+ */
+export async function getPublicLabWriteupBySlug(
+  slug: string,
+  options?: PortfolioQueryOptions,
+): Promise<CmsLabWriteup | null> {
+  const portfolioId = await getPortfolioId(options);
+
+  if (!portfolioId) {
+    return null;
+  }
+
+  const supabase = createServerSupabaseClient();
+
+  return requireMaybeSingle<CmsLabWriteup>(
+    supabase
+      .from('lab_writeups')
+      .select('*')
+      .eq('portfolio_id', portfolioId)
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .eq('visibility', 'public')
+      .neq('machine_status', 'active')
+      .maybeSingle(),
   );
 }
 

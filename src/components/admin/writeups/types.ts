@@ -3,6 +3,19 @@ export type EditableListItem = {
   value: string;
 };
 
+export type GithubExploitEditorItem = {
+  id: string;
+  label: string;
+  url: string;
+  description: string;
+};
+
+export type GithubExploitPayloadItem = {
+  label: string;
+  url: string;
+  description?: string;
+};
+
 export type WriteupVisibility = 'public' | 'restricted' | 'private';
 export type WriteupMachineStatus = 'active' | 'retired' | 'other';
 export type WriteupLabType = 'offensive' | 'defensive';
@@ -28,6 +41,7 @@ export type WriteupEditorValue = {
   tools: EditableListItem[];
   skills: EditableListItem[];
   tags: EditableListItem[];
+  githubExploits: GithubExploitEditorItem[];
   storageBucket: string;
   storagePath: string;
   fileName: string;
@@ -57,6 +71,7 @@ export type WriteupPayload = {
   tools: string[];
   skills: string[];
   tags: string[];
+  githubExploits: GithubExploitPayloadItem[];
   storageBucket: string;
   storagePath: string;
   fileName: string;
