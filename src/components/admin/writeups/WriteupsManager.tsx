@@ -4,20 +4,29 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import type { Portfolio, PortfolioRole } from '@/types/portfolio';
-import { WriteupForm } from './WriteupForm';
+import { WriteupForm, type ExtractedDraft } from './WriteupForm';
 import { WriteupsList } from './WriteupsList';
 import { WriteupPreviewCard } from './WriteupPreviewCard';
-import type { EditableListItem, WriteupEditorValue, WriteupMutationResult, WriteupPayload, ProjectOption } from './types';
+import type {
+  EditableListItem,
+  WriteupEditorValue,
+  WriteupFileUploadResult,
+  WriteupMutationResult,
+  WriteupPayload,
+  ProjectOption,
+} from './types';
 
 type WriteupsManagerProps = {
   archiveWriteup: (writeupId: string) => Promise<WriteupMutationResult>;
   createWriteup: (payload: WriteupPayload) => Promise<WriteupMutationResult>;
   initialWriteups: WriteupEditorValue[];
   portfolio: Portfolio;
+  removeWriteupFile: (writeupId: string) => Promise<WriteupMutationResult>;
   reorderWriteups: (orderedWriteupIds: string[]) => Promise<WriteupMutationResult>;
   restoreWriteup: (writeupId: string) => Promise<WriteupMutationResult>;
   role: PortfolioRole;
   updateWriteup: (writeupId: string, payload: WriteupPayload) => Promise<WriteupMutationResult>;
+  uploadWriteupFile: (writeupId: string, formData: FormData) => Promise<WriteupFileUploadResult>;
   projects: ProjectOption[];
 };
 
@@ -108,15 +117,25 @@ function cloneWriteup(writeup: WriteupEditorValue): WriteupEditorValue {
   };
 }
 
+function uploadErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Upload failed before the server returned a response. Check the file size, network connection, and server logs.';
+}
+
 export function WriteupsManager({
   archiveWriteup,
   createWriteup,
   initialWriteups,
   portfolio,
+  removeWriteupFile,
   reorderWriteups,
   restoreWriteup,
   role,
   updateWriteup,
+  uploadWriteupFile,
   projects,
 }: WriteupsManagerProps) {
   const router = useRouter();
@@ -124,7 +143,9 @@ export function WriteupsManager({
   const [writeups, setWriteups] = useState(() => sortedWriteups(initialWriteups));
   const [editingWriteup, setEditingWriteup] = useState<WriteupEditorValue | null>(null);
   const [message, setMessage] = useState<WriteupMutationResult>({});
+  const [uploadMessage, setUploadMessage] = useState<WriteupMutationResult>({});
   const [pending, setPending] = useState(false);
+  const [extractedDraft, setExtractedDraft] = useState<ExtractedDraft | null>(null);
 
   useEffect(() => {
     setWriteups(sortedWriteups(initialWriteups));
@@ -166,7 +187,102 @@ export function WriteupsManager({
     }
 
     setMessage({});
+    setUploadMessage({});
+    setExtractedDraft(null);
     setEditingWriteup(createDraftWriteup(nextOrderIndex));
+  };
+
+  const handleUploadFile = async (file: File) => {
+    if (readOnly || pending || !editingWriteup?.id) {
+      return;
+    }
+
+    const writeupId = editingWriteup.id;
+
+    setPending(true);
+    setUploadMessage({ success: `Uploading and extracting ${file.name}...` });
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const result = await uploadWriteupFile(writeupId, formData);
+
+      if (result.error) {
+        setUploadMessage({ error: result.error });
+        return;
+      }
+
+      if (result.file) {
+        setEditingWriteup((current) =>
+          current && current.id === writeupId ? { ...current, ...result.file } : current,
+        );
+      }
+
+      if (result.extractedMarkdown) {
+        setExtractedDraft({
+          markdown: result.extractedMarkdown,
+          warning: result.extractionWarning ?? null,
+        });
+      } else {
+        setExtractedDraft(null);
+      }
+
+      setUploadMessage({
+        success: result.extractionWarning
+          ? `${result.success} ${result.extractionWarning}`
+          : result.success,
+      });
+      router.refresh();
+    } catch (error) {
+      console.error('Writeup file upload failed:', error);
+      setUploadMessage({ error: uploadErrorMessage(error) });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const handleRemoveFile = async () => {
+    if (readOnly || pending || !editingWriteup?.id) {
+      return;
+    }
+
+    const writeupId = editingWriteup.id;
+
+    setPending(true);
+    setUploadMessage({});
+
+    try {
+      const result = await removeWriteupFile(writeupId);
+
+      if (result.error) {
+        setUploadMessage({ error: result.error });
+        return;
+      }
+
+      setEditingWriteup((current) =>
+        current && current.id === writeupId
+          ? { ...current, storageBucket: '', storagePath: '', fileName: '', fileType: '' }
+          : current,
+      );
+      setExtractedDraft(null);
+      setUploadMessage(result);
+      router.refresh();
+    } catch (error) {
+      console.error('Writeup file removal failed:', error);
+      setUploadMessage({ error: uploadErrorMessage(error) });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const handleApplyExtracted = () => {
+    if (!extractedDraft || !editingWriteup) {
+      return;
+    }
+
+    setEditingWriteup({ ...editingWriteup, contentMarkdown: extractedDraft.markdown });
+    setExtractedDraft(null);
   };
 
   const handleSave = () => {
@@ -271,6 +387,8 @@ export function WriteupsManager({
             onArchive={handleArchive}
             onEdit={(writeup) => {
               setMessage({});
+              setUploadMessage({});
+              setExtractedDraft(null);
               setEditingWriteup(cloneWriteup(writeup));
             }}
             onMove={handleMove}
@@ -287,11 +405,21 @@ export function WriteupsManager({
             disabled={readOnly}
             writeup={editingWriteup}
             mode={editingWriteup.id ? 'edit' : 'create'}
-            onCancel={() => setEditingWriteup(null)}
+            onCancel={() => {
+              setUploadMessage({});
+              setExtractedDraft(null);
+              setEditingWriteup(null);
+            }}
             onChange={setEditingWriteup}
             onSave={handleSave}
             pending={pending}
             projects={projects}
+            onUploadFile={(file) => void handleUploadFile(file)}
+            onRemoveFile={() => void handleRemoveFile()}
+            extractedDraft={extractedDraft}
+            uploadMessage={uploadMessage}
+            onApplyExtracted={handleApplyExtracted}
+            onDismissExtracted={() => setExtractedDraft(null)}
           />
         ) : (
           <div className="border border-dashed border-cyan-400/20 bg-black/20 p-6 font-mono text-xs text-gray-500">

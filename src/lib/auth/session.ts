@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { fetchWithRetry } from '@/lib/supabase/fetch-retry';
 
 export const ADMIN_ACCESS_TOKEN_COOKIE = 'ianos_admin_access_token';
 export const ADMIN_REFRESH_TOKEN_COOKIE = 'ianos_admin_refresh_token';
@@ -26,13 +27,16 @@ export async function createAdminSupabaseClient(accessToken?: string): Promise<S
   const { supabaseUrl, supabaseAnonKey } = readPublicSupabaseEnv();
 
   const client = createClient(supabaseUrl, supabaseAnonKey, {
-    global: accessToken
-      ? {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      : undefined,
+    global: {
+      fetch: fetchWithRetry,
+      ...(accessToken
+        ? {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        : {}),
+    },
     auth: {
       autoRefreshToken: false,
       persistSession: false,

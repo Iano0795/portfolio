@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { fetchWithRetry } from '@/lib/supabase/fetch-retry';
 
 function assertServerOnly() {
   if (typeof window !== 'undefined') {
@@ -34,6 +35,7 @@ export function createServerSupabaseClient() {
   const { supabaseUrl, supabaseAnonKey } = readPublicSupabaseEnv();
 
   return createClient(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: fetchWithRetry },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -47,6 +49,7 @@ export function createServiceRoleSupabaseClient() {
   const { supabaseUrl, serviceRoleKey } = readServiceRoleSupabaseEnv();
 
   return createClient(supabaseUrl, serviceRoleKey, {
+    global: { fetch: fetchWithRetry },
     auth: {
       autoRefreshToken: false,
       persistSession: false,

@@ -3,7 +3,39 @@
 import { revalidatePath } from 'next/cache';
 import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
 import { requirePortfolioManager } from '@/lib/auth/portfolio-access';
-import type { WriteupMutationResult, WriteupPayload } from '@/components/admin/writeups/types';
+import { extractWriteupContent, type EmbeddedWriteupImage } from '@/lib/writeups/extract-content';
+import type { WriteupFileUploadResult, WriteupMutationResult, WriteupPayload } from '@/components/admin/writeups/types';
+
+const WRITEUPS_BUCKET = 'writeups';
+const WRITEUP_ASSETS_BUCKET = 'writeup-assets';
+const MAX_WRITEUP_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+const MAX_WRITEUP_ASSET_SIZE = 5 * 1024 * 1024; // Matches the writeup-assets bucket limit.
+const WRITEUP_EXTRACTION_TIMEOUT_MS = 60_000;
+
+const ALLOWED_WRITEUP_FILE_TYPES: Record<string, string> = {
+  'application/pdf': 'PDF',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word (.docx)',
+  'text/markdown': 'Markdown',
+  'text/plain': 'Markdown / plain text',
+};
+
+const WRITEUP_FILE_TYPES_BY_EXTENSION: Record<string, string> = {
+  '.pdf': 'application/pdf',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.md': 'text/markdown',
+};
+
+const EMBEDDED_IMAGE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
+type ExtractedWriteupAsset = {
+  storagePath: string;
+  altText: string | null;
+  orderIndex: number;
+};
 
 type WriteupInput = {
   project_id: string | null;
@@ -55,6 +87,166 @@ function generateSlugFromTitle(title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .substring(0, 180);
+}
+
+function sanitizeFileName(fileName: string): string {
+  return fileName
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]/g, '_')
+    .replace(/_{2,}/g, '_')
+    .slice(0, 180);
+}
+
+function getFileExtension(fileName: string) {
+  const normalized = fileName.toLowerCase();
+  const dotIndex = normalized.lastIndexOf('.');
+
+  return dotIndex >= 0 ? normalized.slice(dotIndex) : '';
+}
+
+function inferWriteupFileType(file: File) {
+  const extensionType = WRITEUP_FILE_TYPES_BY_EXTENSION[getFileExtension(file.name)];
+
+  if (file.type && ALLOWED_WRITEUP_FILE_TYPES[file.type]) {
+    return file.type;
+  }
+
+  return extensionType ?? null;
+}
+
+async function extractWriteupContentWithTimeout(
+  file: File,
+  options?: Parameters<typeof extractWriteupContent>[1],
+  onTimeout?: () => void,
+) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      extractWriteupContent(file, options),
+      new Promise<Awaited<ReturnType<typeof extractWriteupContent>>>((resolve) => {
+        timeout = setTimeout(() => {
+          onTimeout?.();
+          resolve({
+            markdown: null,
+            warning:
+              'File uploaded, but text extraction took too long. Try a smaller document, reduce embedded image sizes, or paste the Markdown manually.',
+          });
+        }, WRITEUP_EXTRACTION_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
+}
+
+function createEmbeddedImageUploader({
+  portfolioSlug,
+  supabase,
+  timestamp,
+  writeupSlug,
+}: {
+  portfolioSlug: string;
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>;
+  timestamp: number;
+  writeupSlug: string;
+}) {
+  const extractedAssets: ExtractedWriteupAsset[] = [];
+  let acceptsUploads = true;
+
+  const uploadEmbeddedImage = async (image: EmbeddedWriteupImage) => {
+    if (!acceptsUploads) {
+      throw new Error(`Embedded image ${image.index} upload skipped because extraction timed out.`);
+    }
+
+    const extension = EMBEDDED_IMAGE_EXTENSIONS[image.contentType];
+
+    if (!extension) {
+      throw new Error(
+        `Embedded image ${image.index} uses ${image.contentType || 'an unknown format'}; only PNG, JPEG, and WebP are supported.`,
+      );
+    }
+
+    if (image.data.byteLength > MAX_WRITEUP_ASSET_SIZE) {
+      throw new Error(`Embedded image ${image.index} exceeds the 5MB public asset limit.`);
+    }
+
+    const paddedIndex = image.index.toString().padStart(2, '0');
+    const assetPath = `${portfolioSlug}/${writeupSlug}/extracted/${timestamp}-embedded-${paddedIndex}.${extension}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(WRITEUP_ASSETS_BUCKET)
+      .upload(assetPath, image.data, {
+        cacheControl: '31536000',
+        contentType: image.contentType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error(`Embedded image ${image.index} upload failed: ${uploadError.message}`);
+    }
+
+    const { data: publicUrlData } = supabase.storage.from(WRITEUP_ASSETS_BUCKET).getPublicUrl(uploadData.path);
+
+    extractedAssets.push({
+      storagePath: uploadData.path,
+      altText: image.altText,
+      orderIndex: image.index - 1,
+    });
+
+    return { src: publicUrlData.publicUrl };
+  };
+
+  return {
+    extractedAssets,
+    uploadEmbeddedImage,
+    cancelUploads: () => {
+      acceptsUploads = false;
+    },
+  };
+}
+
+async function recordExtractedWriteupAssets({
+  assets,
+  portfolioId,
+  supabase,
+  writeupId,
+}: {
+  assets: ExtractedWriteupAsset[];
+  portfolioId: string;
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>;
+  writeupId: string;
+}) {
+  if (assets.length === 0) {
+    return null;
+  }
+
+  const { error } = await supabase.from('writeup_media').insert(
+    assets.map((asset) => ({
+      portfolio_id: portfolioId,
+      writeup_id: writeupId,
+      media_type: 'image',
+      storage_bucket: WRITEUP_ASSETS_BUCKET,
+      storage_path: asset.storagePath,
+      alt_text: asset.altText,
+      caption: null,
+      order_index: asset.orderIndex,
+      is_active: true,
+    })),
+  );
+
+  return error?.message ?? null;
+}
+
+function appendWarning(existingWarning: string | null, warning: string) {
+  return existingWarning ? `${existingWarning} ${warning}` : warning;
+}
+
+/** ~200 words per minute, clamped to the 1-300 range the validator accepts. */
+function estimateReadingTimeMinutes(markdown: string): number {
+  const words = markdown.trim().split(/\s+/).filter(Boolean).length;
+  return Math.min(300, Math.max(1, Math.ceil(words / 200)));
 }
 
 function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
@@ -182,7 +374,9 @@ function validateWriteupPayload(payload: WriteupPayload): WriteupInput {
     public_teaser: nullableText(payload.publicTeaser),
     content_markdown: nullableText(payload.contentMarkdown),
     cover_image_url: coverImageUrl || null,
-    reading_time_minutes: payload.readingTimeMinutes,
+    reading_time_minutes:
+      payload.readingTimeMinutes ??
+      (payload.contentMarkdown.trim() ? estimateReadingTimeMinutes(payload.contentMarkdown) : null),
     published_at: nullableText(payload.publishedAt),
     tools,
     skills,
@@ -422,6 +616,183 @@ export async function restoreWriteupAction(
     return { success: 'Writeup restored.' };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Unable to restore writeup.' };
+  }
+}
+
+async function getWriteupFileContext(
+  supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
+  portfolioId: string,
+  writeupId: string,
+) {
+  const { data, error } = await supabase
+    .from('lab_writeups')
+    .select('id, slug, storage_path')
+    .eq('id', writeupId)
+    .eq('portfolio_id', portfolioId)
+    .maybeSingle<{ id: string; slug: string; storage_path: string | null }>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error('Writeup not found for this portfolio.');
+  }
+
+  return data;
+}
+
+export async function uploadWriteupFileAction(
+  portfolioSlug: string,
+  writeupId: string,
+  formData: FormData,
+): Promise<WriteupFileUploadResult> {
+  try {
+    const { access, supabase } = await getMutationContext(portfolioSlug);
+    const writeup = await getWriteupFileContext(supabase, access.portfolio.id, writeupId);
+
+    const file = formData.get('file') as File | null;
+
+    if (!file) {
+      return { error: 'No file provided.' };
+    }
+
+    const fileType = inferWriteupFileType(file);
+
+    if (!fileType) {
+      return { error: 'Only PDF, Word (.docx), or Markdown files are allowed.' };
+    }
+
+    if (file.size > MAX_WRITEUP_FILE_SIZE) {
+      return { error: 'File size must be 20MB or less.' };
+    }
+
+    const previousPath = writeup.storage_path;
+    const timestamp = Date.now();
+    const sanitizedFileName = sanitizeFileName(file.name) || `writeup-${timestamp}`;
+    const filePath = `${portfolioSlug}/${writeup.slug}/${timestamp}-${sanitizedFileName}`;
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(WRITEUPS_BUCKET)
+      .upload(filePath, file, {
+        contentType: fileType,
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      return { error: `Upload failed: ${uploadError.message}` };
+    }
+
+    const fileMetadata = {
+      storage_bucket: WRITEUPS_BUCKET,
+      storage_path: uploadData.path,
+      file_name: file.name.slice(0, 240),
+      file_type: fileType.slice(0, 120),
+    };
+
+    const { error: updateError } = await supabase
+      .from('lab_writeups')
+      .update(fileMetadata)
+      .eq('id', writeupId)
+      .eq('portfolio_id', access.portfolio.id);
+
+    if (updateError) {
+      await supabase.storage.from(WRITEUPS_BUCKET).remove([uploadData.path]);
+      return { error: updateError.message };
+    }
+
+    // Replaced file: remove the old object best-effort (metadata already points at the new one).
+    if (previousPath && previousPath !== uploadData.path) {
+      await supabase.storage.from(WRITEUPS_BUCKET).remove([previousPath]);
+    }
+
+    const imageUploader = fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ? createEmbeddedImageUploader({
+          portfolioSlug,
+          supabase,
+          timestamp,
+          writeupSlug: writeup.slug,
+        })
+      : null;
+
+    const extraction = await extractWriteupContentWithTimeout(
+      file,
+      imageUploader ? { uploadEmbeddedImage: imageUploader.uploadEmbeddedImage } : undefined,
+      imageUploader?.cancelUploads,
+    );
+    const assetRecordingError = imageUploader
+      ? await recordExtractedWriteupAssets({
+          assets: imageUploader.extractedAssets,
+          portfolioId: access.portfolio.id,
+          supabase,
+          writeupId,
+        })
+      : null;
+
+    revalidateWriteups(portfolioSlug);
+
+    return {
+      success: 'File uploaded successfully.',
+      file: {
+        storageBucket: fileMetadata.storage_bucket,
+        storagePath: fileMetadata.storage_path,
+        fileName: fileMetadata.file_name,
+        fileType: fileMetadata.file_type,
+      },
+      extractedMarkdown: extraction.markdown,
+      extractionWarning: assetRecordingError
+        ? appendWarning(
+            extraction.warning,
+            `Extracted images were inserted into the Markdown, but their media metadata could not be saved: ${assetRecordingError}`,
+          )
+        : extraction.warning,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Unable to upload writeup file.' };
+  }
+}
+
+export async function removeWriteupFileAction(
+  portfolioSlug: string,
+  writeupId: string,
+): Promise<WriteupMutationResult> {
+  try {
+    const { access, supabase } = await getMutationContext(portfolioSlug);
+    const writeup = await getWriteupFileContext(supabase, access.portfolio.id, writeupId);
+
+    if (!writeup.storage_path) {
+      return { error: 'This writeup has no attached file.' };
+    }
+
+    const { error: removeError } = await supabase.storage
+      .from(WRITEUPS_BUCKET)
+      .remove([writeup.storage_path]);
+
+    if (removeError) {
+      return { error: `Could not delete the stored file: ${removeError.message}` };
+    }
+
+    const { error: updateError } = await supabase
+      .from('lab_writeups')
+      .update({
+        storage_bucket: null,
+        storage_path: null,
+        file_name: null,
+        file_type: null,
+      })
+      .eq('id', writeupId)
+      .eq('portfolio_id', access.portfolio.id);
+
+    if (updateError) {
+      return { error: updateError.message };
+    }
+
+    revalidateWriteups(portfolioSlug);
+
+    return { success: 'File removed.' };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Unable to remove writeup file.' };
   }
 }
 

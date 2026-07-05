@@ -7,12 +7,15 @@ import { requirePortfolioAccess } from '@/lib/auth/portfolio-access';
 import {
   archiveWriteupAction,
   createWriteupAction,
+  removeWriteupFileAction,
   reorderWriteupsAction,
   restoreWriteupAction,
   updateWriteupAction,
+  uploadWriteupFileAction,
 } from './actions';
 
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 type WriteupsPageProps = {
   params: Promise<{
@@ -174,6 +177,8 @@ export default async function WriteupsPage({ params }: WriteupsPageProps) {
           archiveWriteup={archiveWriteupAction.bind(null, portfolioSlug)}
           restoreWriteup={restoreWriteupAction.bind(null, portfolioSlug)}
           reorderWriteups={reorderWriteupsAction.bind(null, portfolioSlug)}
+          uploadWriteupFile={uploadWriteupFileAction.bind(null, portfolioSlug)}
+          removeWriteupFile={removeWriteupFileAction.bind(null, portfolioSlug)}
         />
       </AdminShell>
     );
