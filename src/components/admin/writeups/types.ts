@@ -71,6 +71,19 @@ export type WriteupMutationResult = {
   success?: string;
 };
 
+export type WriteupFileMetadata = {
+  storageBucket: string;
+  storagePath: string;
+  fileName: string;
+  fileType: string;
+};
+
+export type WriteupFileUploadResult = WriteupMutationResult & {
+  file?: WriteupFileMetadata;
+  extractedMarkdown?: string | null;
+  extractionWarning?: string | null;
+};
+
 export type ProjectOption = {
   id: string;
   title: string;
