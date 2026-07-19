@@ -3,9 +3,11 @@
 import { revalidatePath } from 'next/cache';
 import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
 import { requirePortfolioManager } from '@/lib/auth/portfolio-access';
+import { DEFAULT_ENABLED_SIDEBAR_ITEMS, MANAGEABLE_SIDEBAR_ITEMS } from '@/components/admin/AdminSidebar';
 import type {
   BrandSettingsEditorValue,
   SettingsMutationResult,
+  SidebarSettingsEditorValue,
   SiteSettingsEditorValue,
 } from '@/components/admin/settings/types';
 
@@ -137,6 +139,19 @@ function validateSiteSettingsPayload(payload: SiteSettingsEditorValue): SiteSett
   };
 }
 
+const ALWAYS_ENABLED_SIDEBAR_ITEM = 'settings';
+const MANAGEABLE_SIDEBAR_ITEM_IDS = new Set(MANAGEABLE_SIDEBAR_ITEMS.map((item) => item.id));
+
+function validateSidebarSettingsPayload(payload: SidebarSettingsEditorValue): string[] {
+  const enabledItems = Array.from(new Set(payload.enabledItems)).filter((id) => MANAGEABLE_SIDEBAR_ITEM_IDS.has(id));
+
+  if (!enabledItems.includes(ALWAYS_ENABLED_SIDEBAR_ITEM)) {
+    enabledItems.push(ALWAYS_ENABLED_SIDEBAR_ITEM);
+  }
+
+  return enabledItems;
+}
+
 async function getMutationContext(portfolioSlug: string) {
   const tokens = await getAdminSessionTokens();
 
@@ -178,7 +193,7 @@ async function getExistingSiteSettingsId(
 async function saveSiteSettingsRow(
   supabase: Awaited<ReturnType<typeof createAdminSupabaseClient>>,
   portfolioId: string,
-  payload: Partial<SiteSettingsInput> & { brand_name?: string | null },
+  payload: Partial<SiteSettingsInput> & { brand_name?: string | null; admin_sidebar_modules?: string[] },
 ) {
   const existingId = await getExistingSiteSettingsId(supabase, portfolioId);
 
@@ -245,5 +260,29 @@ export async function updateSiteSettings(
     return { success: 'Site settings saved.' };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Unable to save site settings.' };
+  }
+}
+
+export async function updateSidebarSettings(
+  portfolioSlug: string,
+  payload: SidebarSettingsEditorValue,
+): Promise<SettingsMutationResult> {
+  try {
+    const { access, supabase } = await getMutationContext(portfolioSlug);
+    const enabledItems = validateSidebarSettingsPayload(payload);
+    const result = await saveSiteSettingsRow(supabase, access.portfolio.id, {
+      admin_sidebar_modules: enabledItems,
+      is_active: true,
+    });
+
+    if (result.error) {
+      return { error: result.error.message };
+    }
+
+    revalidateSettings(portfolioSlug);
+
+    return { success: 'Sidebar settings saved.' };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Unable to save sidebar settings.' };
   }
 }

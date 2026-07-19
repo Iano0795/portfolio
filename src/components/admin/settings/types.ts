@@ -17,6 +17,10 @@ export type SiteSettingsEditorValue = {
   footerText: string;
 };
 
+export type SidebarSettingsEditorValue = {
+  enabledItems: string[];
+};
+
 export type SettingsMutationResult = {
   error?: string;
   success?: string;

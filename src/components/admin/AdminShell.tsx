@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import type { User } from '@supabase/supabase-js';
 import type { Portfolio, PortfolioRole } from '@/types/portfolio';
-import { AdminSidebar } from './AdminSidebar';
+import { getSiteSettings } from '@/lib/cms/queries';
+import { AdminSidebar, DEFAULT_ENABLED_SIDEBAR_ITEMS } from './AdminSidebar';
 import { AdminStatusBar } from './AdminStatusBar';
 import { AdminTopBar } from './AdminTopBar';
 
@@ -28,8 +29,10 @@ type AdminShellProps = {
   children: ReactNode;
 };
 
-export function AdminShell({ activeItem = 'dashboard', portfolio, user, role, children }: AdminShellProps) {
+export async function AdminShell({ activeItem = 'dashboard', portfolio, user, role, children }: AdminShellProps) {
   const environment = process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? 'local';
+  const settings = await getSiteSettings({ portfolioSlug: portfolio.slug });
+  const enabledItems = settings?.admin_sidebar_modules ?? DEFAULT_ENABLED_SIDEBAR_ITEMS;
 
   return (
     <main className="relative flex h-screen flex-col overflow-hidden bg-[#050812] text-gray-200 selection:bg-[#00ff88]/20 selection:text-[#eafff5]">
@@ -48,7 +51,7 @@ export function AdminShell({ activeItem = 'dashboard', portfolio, user, role, ch
       <AdminTopBar environment={environment} portfolio={portfolio} userEmail={user.email ?? 'unknown'} />
 
       <div className="relative z-10 flex min-h-0 flex-1 overflow-hidden">
-        <AdminSidebar activeItem={activeItem} portfolioSlug={portfolio.slug} />
+        <AdminSidebar activeItem={activeItem} portfolioSlug={portfolio.slug} enabledItems={enabledItems} />
         <section className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">{children}</section>
       </div>
 

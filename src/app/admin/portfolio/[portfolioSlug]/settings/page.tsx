@@ -1,12 +1,17 @@
 import { redirect } from 'next/navigation';
 import { AdminShell } from '@/components/admin/AdminShell';
+import { DEFAULT_ENABLED_SIDEBAR_ITEMS } from '@/components/admin/AdminSidebar';
 import { SiteSettingsManager } from '@/components/admin/settings/SiteSettingsManager';
-import type { BrandSettingsEditorValue, SiteSettingsEditorValue } from '@/components/admin/settings/types';
+import type {
+  BrandSettingsEditorValue,
+  SidebarSettingsEditorValue,
+  SiteSettingsEditorValue,
+} from '@/components/admin/settings/types';
 import { siteConfig } from '@/data/site';
 import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
 import { requirePortfolioAccess } from '@/lib/auth/portfolio-access';
 import type { CmsSiteSettings } from '@/lib/cms/queries';
-import { updateBrandSettings, updateSiteSettings } from './actions';
+import { updateBrandSettings, updateSidebarSettings, updateSiteSettings } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +51,12 @@ function normalizeSiteSettings(settings: CmsSiteSettings | null, brand: BrandSet
   };
 }
 
+function normalizeSidebarSettings(settings: CmsSiteSettings | null): SidebarSettingsEditorValue {
+  return {
+    enabledItems: settings?.admin_sidebar_modules ?? DEFAULT_ENABLED_SIDEBAR_ITEMS,
+  };
+}
+
 async function getEditableSiteSettings(portfolioId: string) {
   const tokens = await getAdminSessionTokens();
 
@@ -82,10 +93,12 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         <SiteSettingsManager
           initialBrand={brand}
           initialSettings={normalizeSiteSettings(settings, brand)}
+          initialSidebar={normalizeSidebarSettings(settings)}
           portfolio={access.portfolio}
           role={access.member.role}
           updateBrandSettings={updateBrandSettings.bind(null, portfolioSlug)}
           updateSiteSettings={updateSiteSettings.bind(null, portfolioSlug)}
+          updateSidebarSettings={updateSidebarSettings.bind(null, portfolioSlug)}
         />
       </AdminShell>
     );

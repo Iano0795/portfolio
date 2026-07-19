@@ -276,6 +276,7 @@ export type CmsSiteSettings = {
   theme_animation_intensity: number | null;
   theme_font_mode: string | null;
   theme_is_active: boolean | null;
+  admin_sidebar_modules: string[] | null;
   is_active: boolean | null;
   created_at: string | null;
   updated_at: string | null;

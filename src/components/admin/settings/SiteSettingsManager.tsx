@@ -5,17 +5,25 @@ import { useRouter } from 'next/navigation';
 import type { Portfolio, PortfolioRole } from '@/types/portfolio';
 import { BrandSettingsForm } from './BrandSettingsForm';
 import { SettingsStatusBadge } from './SettingsStatusBadge';
+import { SidebarSettingsForm } from './SidebarSettingsForm';
 import { SiteSettingsForm } from './SiteSettingsForm';
 import { SiteSettingsPreviewCard } from './SiteSettingsPreviewCard';
-import type { BrandSettingsEditorValue, SettingsMutationResult, SiteSettingsEditorValue } from './types';
+import type {
+  BrandSettingsEditorValue,
+  SettingsMutationResult,
+  SidebarSettingsEditorValue,
+  SiteSettingsEditorValue,
+} from './types';
 
 type SiteSettingsManagerProps = {
   initialBrand: BrandSettingsEditorValue;
   initialSettings: SiteSettingsEditorValue;
+  initialSidebar: SidebarSettingsEditorValue;
   portfolio: Portfolio;
   role: PortfolioRole;
   updateBrandSettings: (payload: BrandSettingsEditorValue) => Promise<SettingsMutationResult>;
   updateSiteSettings: (payload: SiteSettingsEditorValue) => Promise<SettingsMutationResult>;
+  updateSidebarSettings: (payload: SidebarSettingsEditorValue) => Promise<SettingsMutationResult>;
 };
 
 function canSave(role: PortfolioRole) {
@@ -25,18 +33,22 @@ function canSave(role: PortfolioRole) {
 export function SiteSettingsManager({
   initialBrand,
   initialSettings,
+  initialSidebar,
   portfolio,
   role,
   updateBrandSettings,
   updateSiteSettings,
+  updateSidebarSettings,
 }: SiteSettingsManagerProps) {
   const router = useRouter();
   const manager = canSave(role);
   const readOnly = !manager;
   const [brand, setBrand] = useState(initialBrand);
   const [settings, setSettings] = useState(initialSettings);
+  const [sidebar, setSidebar] = useState(initialSidebar);
   const [brandPending, setBrandPending] = useState(false);
   const [settingsPending, setSettingsPending] = useState(false);
+  const [sidebarPending, setSidebarPending] = useState(false);
   const [message, setMessage] = useState<SettingsMutationResult>({});
 
   useEffect(() => {
@@ -46,6 +58,10 @@ export function SiteSettingsManager({
   useEffect(() => {
     setSettings(initialSettings);
   }, [initialSettings]);
+
+  useEffect(() => {
+    setSidebar(initialSidebar);
+  }, [initialSidebar]);
 
   const finishMutation = (result: SettingsMutationResult) => {
     setMessage(result);
@@ -82,6 +98,21 @@ export function SiteSettingsManager({
       finishMutation(await updateSiteSettings(settings));
     } finally {
       setSettingsPending(false);
+    }
+  };
+
+  const handleSidebarSave = async () => {
+    if (readOnly || sidebarPending) {
+      return;
+    }
+
+    setSidebarPending(true);
+    setMessage({});
+
+    try {
+      finishMutation(await updateSidebarSettings(sidebar));
+    } finally {
+      setSidebarPending(false);
     }
   };
 
@@ -127,6 +158,14 @@ export function SiteSettingsManager({
             onSave={handleSettingsSave}
             pending={settingsPending}
             settings={settings}
+          />
+
+          <SidebarSettingsForm
+            disabled={readOnly}
+            onChange={setSidebar}
+            onSave={handleSidebarSave}
+            pending={sidebarPending}
+            settings={sidebar}
           />
 
           {readOnly && (
