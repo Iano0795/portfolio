@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { AlertTriangle, ChevronDown, ChevronRight, FileText, Plus, Save, Trash2, Upload, X } from 'lucide-react';
-import type { WriteupEditorValue, ProjectOption } from './types';
+import type { WriteupEditorValue, WriteupMutationResult, ProjectOption } from './types';
 import { WriteupArrayFields } from './WriteupArrayFields';
 
 export type ExtractedDraft = {
@@ -27,6 +27,7 @@ type WriteupFormProps = {
   };
   onApplyExtracted: () => void;
   onDismissExtracted: () => void;
+  message: WriteupMutationResult;
 };
 
 const inputClasses =
@@ -94,6 +95,7 @@ export function WriteupForm({
   uploadMessage,
   onApplyExtracted,
   onDismissExtracted,
+  message,
 }: WriteupFormProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -162,6 +164,8 @@ export function WriteupForm({
   };
 
   const hasFile = Boolean(writeup.storagePath);
+  const isUnsafePublicActive = writeup.machineStatus === 'active' && writeup.visibility === 'public';
+  const canSubmit = Boolean(writeup.title.trim()) && Boolean(writeup.slug.trim()) && !isUnsafePublicActive;
 
   return (
     <div className="border border-cyan-400/20 bg-[#090d16]/80">
@@ -735,25 +739,46 @@ export function WriteupForm({
           <p className={hintClasses}>Ordering is managed with the up/down arrows in the writeups index.</p>
         </Section>
 
-        <div className="flex gap-3 border-t border-cyan-400/10 pt-6">
-          <button
-            type="button"
-            disabled={disabled || pending}
-            onClick={onSave}
-            className="inline-flex items-center gap-2 border border-[#00ff88]/45 bg-[#00ff88]/10 px-4 py-2.5 font-mono text-sm text-[#00ff88] shadow-[0_0_16px_rgba(0,255,136,0.12)] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" aria-hidden="true" />
-            {pending ? 'Saving...' : 'Save Writeup'}
-          </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={onCancel}
-            className="inline-flex items-center gap-2 border border-gray-600/45 bg-gray-600/10 px-4 py-2.5 font-mono text-sm text-gray-400 transition-all hover:bg-gray-600/18 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-            Cancel
-          </button>
+        <div className="space-y-3 border-t border-cyan-400/10 pt-6">
+          {!canSubmit && (
+            <p className="font-mono text-[10px] leading-relaxed text-[#ffbd2e]">
+              {isUnsafePublicActive
+                ? 'Resolve the active/public conflict above before saving.'
+                : 'Title and slug are required before saving.'}
+            </p>
+          )}
+
+          {message.error && (
+            <div className="border border-[#ff5f56]/35 bg-[#ff5f56]/10 px-3 py-2 font-mono text-xs text-[#ffb4ad]" role="alert">
+              {message.error}
+            </div>
+          )}
+          {message.success && (
+            <div className="border border-[#00ff88]/35 bg-[#00ff88]/10 px-3 py-2 font-mono text-xs text-[#00ff88]" role="status">
+              {message.success}
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              disabled={disabled || pending || !canSubmit}
+              onClick={onSave}
+              className="inline-flex items-center gap-2 border border-[#00ff88]/45 bg-[#00ff88]/10 px-4 py-2.5 font-mono text-sm text-[#00ff88] shadow-[0_0_16px_rgba(0,255,136,0.12)] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {pending ? 'Saving...' : 'Save Writeup'}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={onCancel}
+              className="inline-flex items-center gap-2 border border-gray-600/45 bg-gray-600/10 px-4 py-2.5 font-mono text-sm text-gray-400 transition-all hover:bg-gray-600/18 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <X className="h-4 w-4" aria-hidden="true" />
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>

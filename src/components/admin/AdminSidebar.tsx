@@ -37,6 +37,17 @@ const sidebarItems = [
   { label: 'Media Library', module: 'media.vault', icon: Image },
 ];
 
+// Sidebar module ids that can be toggled on/off from Settings. "settings" is intentionally
+// excluded from the manageable list's enforcement below — it always renders enabled so an
+// admin can never lock themselves out of the page that controls this list.
+export const MANAGEABLE_SIDEBAR_ITEMS = sidebarItems
+  .filter((item): item is (typeof sidebarItems)[number] & { id: string; href: string } => 'id' in item)
+  .map((item) => ({ id: item.id, label: item.label }));
+
+export const DEFAULT_ENABLED_SIDEBAR_ITEMS = ['writeups', 'access-requests', 'settings'];
+
+const ALWAYS_ENABLED_SIDEBAR_ITEM = 'settings';
+
 type AdminSidebarProps = {
   activeItem:
     | 'dashboard'
@@ -55,9 +66,10 @@ type AdminSidebarProps = {
     | 'writeups'
     | 'access-requests';
   portfolioSlug: string;
+  enabledItems?: string[];
 };
 
-export function AdminSidebar({ activeItem, portfolioSlug }: AdminSidebarProps) {
+export function AdminSidebar({ activeItem, portfolioSlug, enabledItems = DEFAULT_ENABLED_SIDEBAR_ITEMS }: AdminSidebarProps) {
   return (
     <aside className="hidden w-72 flex-shrink-0 flex-col border-r border-[#00ff88]/20 bg-[#090d16]/95 shadow-[0_0_20px_rgba(0,255,136,0.04)] md:flex">
       <div className="border-b border-[#00ff88]/10 p-3">
@@ -69,7 +81,9 @@ export function AdminSidebar({ activeItem, portfolioSlug }: AdminSidebarProps) {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {sidebarItems.map((item) => {
+        {sidebarItems
+          .filter((item) => !item.id || item.id === ALWAYS_ENABLED_SIDEBAR_ITEM || enabledItems.includes(item.id))
+          .map((item) => {
           const Icon = item.icon;
           const active = item.id === activeItem;
           const href = 'href' in item ? `/admin/portfolio/${portfolioSlug}${item.href}` : null;

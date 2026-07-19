@@ -161,7 +161,9 @@ export function WriteupsManager({
   const manager = canSave(role);
   const [writeups, setWriteups] = useState(() => sortedWriteups(initialWriteups));
   const [editingWriteup, setEditingWriteup] = useState<WriteupEditorValue | null>(null);
+  const [originalWriteup, setOriginalWriteup] = useState<WriteupEditorValue | null>(null);
   const [message, setMessage] = useState<WriteupMutationResult>({});
+  const [formMessage, setFormMessage] = useState<WriteupMutationResult>({});
   const [uploadMessage, setUploadMessage] = useState<WriteupMutationResult>({});
   const [pending, setPending] = useState(false);
   const [extractedDraft, setExtractedDraft] = useState<ExtractedDraft | null>(null);
@@ -172,43 +174,63 @@ export function WriteupsManager({
 
   const nextOrderIndex = writeups.length > 0 ? Math.max(...writeups.map((w) => w.orderIndex)) + 1 : 0;
   const readOnly = !manager;
+  const isDirty = Boolean(
+    editingWriteup && originalWriteup && JSON.stringify(editingWriteup) !== JSON.stringify(originalWriteup),
+  );
 
-  const finishMutation = (result: WriteupMutationResult, closeEditor = false) => {
-    setMessage(result);
+  const finishMutation = (
+    result: WriteupMutationResult,
+    setter: (result: WriteupMutationResult) => void,
+    closeEditor = false,
+  ) => {
+    setter(result);
 
     if (result.success) {
       if (closeEditor) {
         setEditingWriteup(null);
+        setOriginalWriteup(null);
       }
 
       router.refresh();
     }
   };
 
-  const runMutation = async (mutation: () => Promise<WriteupMutationResult>, closeEditor = false) => {
+  const runMutation = async (
+    mutation: () => Promise<WriteupMutationResult>,
+    setter: (result: WriteupMutationResult) => void = setMessage,
+    closeEditor = false,
+  ) => {
     if (pending) {
       return;
     }
 
     setPending(true);
-    setMessage({});
+    setter({});
 
     try {
-      finishMutation(await mutation(), closeEditor);
+      finishMutation(await mutation(), setter, closeEditor);
     } finally {
       setPending(false);
     }
   };
 
+  const confirmDiscard = () => !isDirty || confirm('Discard unsaved changes to this writeup?');
+
+  const openEditor = (writeup: WriteupEditorValue) => {
+    setMessage({});
+    setFormMessage({});
+    setUploadMessage({});
+    setExtractedDraft(null);
+    setEditingWriteup(writeup);
+    setOriginalWriteup(writeup);
+  };
+
   const handleNewWriteup = () => {
-    if (readOnly) {
+    if (readOnly || !confirmDiscard()) {
       return;
     }
 
-    setMessage({});
-    setUploadMessage({});
-    setExtractedDraft(null);
-    setEditingWriteup(createDraftWriteup(nextOrderIndex));
+    openEditor(createDraftWriteup(nextOrderIndex));
   };
 
   const handleUploadFile = async (file: File) => {
@@ -242,6 +264,12 @@ export function WriteupsManager({
               }
             : current,
         );
+      }
+
+      // File metadata is already persisted by the upload action, so it isn't an unsaved change.
+      // Extracted markdown is only applied locally, so it stays a genuine pending change until Save.
+      if (result.file) {
+        setOriginalWriteup((current) => (current && current.id === writeupId ? { ...current, ...result.file } : current));
       }
 
       if (result.extractedMarkdown) {
@@ -288,11 +316,10 @@ export function WriteupsManager({
         return;
       }
 
-      setEditingWriteup((current) =>
-        current && current.id === writeupId
-          ? { ...current, storageBucket: '', storagePath: '', fileName: '', fileType: '' }
-          : current,
-      );
+      const clearedFile = { storageBucket: '', storagePath: '', fileName: '', fileType: '' };
+
+      setEditingWriteup((current) => (current && current.id === writeupId ? { ...current, ...clearedFile } : current));
+      setOriginalWriteup((current) => (current && current.id === writeupId ? { ...current, ...clearedFile } : current));
       setExtractedDraft(null);
       setUploadMessage(result);
       router.refresh();
@@ -322,6 +349,7 @@ export function WriteupsManager({
 
     void runMutation(
       () => (editingWriteup.id ? updateWriteup(editingWriteup.id, payload) : createWriteup(payload)),
+      setFormMessage,
       true,
     );
   };
@@ -414,10 +442,11 @@ export function WriteupsManager({
             writeups={writeups}
             onArchive={handleArchive}
             onEdit={(writeup) => {
-              setMessage({});
-              setUploadMessage({});
-              setExtractedDraft(null);
-              setEditingWriteup(cloneWriteup(writeup));
+              if (!confirmDiscard()) {
+                return;
+              }
+
+              openEditor(cloneWriteup(writeup));
             }}
             onMove={handleMove}
             onRestore={handleRestore}
@@ -434,9 +463,15 @@ export function WriteupsManager({
             writeup={editingWriteup}
             mode={editingWriteup.id ? 'edit' : 'create'}
             onCancel={() => {
+              if (!confirmDiscard()) {
+                return;
+              }
+
+              setFormMessage({});
               setUploadMessage({});
               setExtractedDraft(null);
               setEditingWriteup(null);
+              setOriginalWriteup(null);
             }}
             onChange={setEditingWriteup}
             onSave={handleSave}
@@ -448,6 +483,7 @@ export function WriteupsManager({
             uploadMessage={uploadMessage}
             onApplyExtracted={handleApplyExtracted}
             onDismissExtracted={() => setExtractedDraft(null)}
+            message={formMessage}
           />
         ) : (
           <div className="border border-dashed border-cyan-400/20 bg-black/20 p-6 font-mono text-xs text-gray-500">
