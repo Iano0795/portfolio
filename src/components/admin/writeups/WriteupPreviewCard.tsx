@@ -17,10 +17,8 @@ export function WriteupPreviewCard({ writeup }: WriteupPreviewCardProps) {
   }
 
   return (
-    <div className="border border-cyan-400/20 bg-[#090d16]/80">
-      <div className="border-b border-cyan-400/10 px-4 py-3 font-mono text-xs text-cyan-400">Preview</div>
-      <div className="space-y-4 p-4">
-        <div>
+    <div className="space-y-4 p-4">
+      <div>
           <h3 className="mb-2 text-lg font-bold text-white">{writeup.title || 'Untitled Writeup'}</h3>
           <div className="flex flex-wrap gap-2">
             <WriteupVisibilityBadge visibility={writeup.visibility} />
@@ -123,6 +121,5 @@ export function WriteupPreviewCard({ writeup }: WriteupPreviewCardProps) {
           </div>
         )}
       </div>
-    </div>
   );
 }

@@ -168,13 +168,8 @@ export function WriteupForm({
   const canSubmit = Boolean(writeup.title.trim()) && Boolean(writeup.slug.trim()) && !isUnsafePublicActive;
 
   return (
-    <div className="border border-cyan-400/20 bg-[#090d16]/80">
-      <div className="border-b border-cyan-400/10 px-4 py-3 font-mono text-xs text-cyan-400">
-        {mode === 'create' ? 'Create New Writeup' : 'Edit Writeup'}
-      </div>
-
-      <div className="space-y-4 p-4">
-        <Section title="Basic Info" defaultOpen>
+    <div className="space-y-4 p-4">
+      <Section title="Basic Info" defaultOpen>
           <div>
             <label htmlFor="writeup-title" className={labelClasses}>
               Title <span className="text-[#ff5f56]">*</span>
@@ -780,7 +775,6 @@ export function WriteupForm({
             </button>
           </div>
         </div>
-      </div>
     </div>
   );
 }
