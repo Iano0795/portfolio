@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { List, Plus, X } from 'lucide-react';
 import type { Portfolio, PortfolioRole } from '@/types/portfolio';
 import { WriteupForm, type ExtractedDraft } from './WriteupForm';
 import { WriteupsList } from './WriteupsList';
@@ -167,10 +167,27 @@ export function WriteupsManager({
   const [uploadMessage, setUploadMessage] = useState<WriteupMutationResult>({});
   const [pending, setPending] = useState(false);
   const [extractedDraft, setExtractedDraft] = useState<ExtractedDraft | null>(null);
+  const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     setWriteups(sortedWriteups(initialWriteups));
   }, [initialWriteups]);
+
+  useEffect(() => {
+    if (!drawerOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDrawerOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [drawerOpen]);
 
   const nextOrderIndex = writeups.length > 0 ? Math.max(...writeups.map((w) => w.orderIndex)) + 1 : 0;
   const readOnly = !manager;
@@ -223,6 +240,8 @@ export function WriteupsManager({
     setExtractedDraft(null);
     setEditingWriteup(writeup);
     setOriginalWriteup(writeup);
+    setActiveTab('edit');
+    setDrawerOpen(false);
   };
 
   const handleNewWriteup = () => {
@@ -231,6 +250,14 @@ export function WriteupsManager({
     }
 
     openEditor(createDraftWriteup(nextOrderIndex));
+  };
+
+  const handleEditWriteup = (writeup: WriteupEditorValue) => {
+    if (!confirmDiscard()) {
+      return;
+    }
+
+    openEditor(cloneWriteup(writeup));
   };
 
   const handleUploadFile = async (file: File) => {
@@ -395,9 +422,20 @@ export function WriteupsManager({
     void runMutation(() => reorderWriteups(reordered.map((item) => item.id).filter((id): id is string => Boolean(id))));
   };
 
+  const listProps = {
+    disabled: readOnly,
+    writeups,
+    onArchive: handleArchive,
+    onEdit: handleEditWriteup,
+    onMove: handleMove,
+    onRestore: handleRestore,
+    pending,
+    selectedWriteupId: editingWriteup?.id ?? null,
+  };
+
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
-      <header className="border border-[#00ff88]/25 bg-[#090d16]/80 p-5 shadow-[0_0_30px_rgba(0,255,136,0.07)] md:p-6">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-4">
+      <header className="flex-shrink-0 border border-[#00ff88]/25 bg-[#090d16]/80 p-5 shadow-[0_0_30px_rgba(0,255,136,0.07)] md:p-6">
         <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-xs">
           <span className="text-cyan-400">writeups.manager</span>
           <span className="border border-[#00ff88]/25 px-2 py-1 text-[#00ff88]">{portfolio.title}</span>
@@ -411,88 +449,141 @@ export function WriteupsManager({
               Manage lab writeups, visibility, restricted files, and safe public summaries.
             </p>
           </div>
-          <button
-            type="button"
-            disabled={readOnly || pending}
-            onClick={handleNewWriteup}
-            className="inline-flex items-center gap-2 border border-[#00ff88]/45 bg-[#00ff88]/10 px-4 py-2.5 font-mono text-sm text-[#00ff88] shadow-[0_0_16px_rgba(0,255,136,0.12)] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-600"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            New Writeup
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex items-center gap-2 border border-cyan-400/45 bg-cyan-400/10 px-4 py-2.5 font-mono text-sm text-cyan-300 transition-all hover:bg-cyan-400/18 lg:hidden"
+            >
+              <List className="h-4 w-4" aria-hidden="true" />
+              Writeups ({writeups.length})
+            </button>
+            <button
+              type="button"
+              disabled={readOnly || pending}
+              onClick={handleNewWriteup}
+              className="inline-flex items-center gap-2 border border-[#00ff88]/45 bg-[#00ff88]/10 px-4 py-2.5 font-mono text-sm text-[#00ff88] shadow-[0_0_16px_rgba(0,255,136,0.12)] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-600"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              New Writeup
+            </button>
+          </div>
         </div>
       </header>
 
       {message.error && (
-        <div className="border border-[#ff5f56]/35 bg-[#ff5f56]/10 px-3 py-2 font-mono text-xs text-[#ffb4ad]" role="alert">
+        <div className="flex-shrink-0 border border-[#ff5f56]/35 bg-[#ff5f56]/10 px-3 py-2 font-mono text-xs text-[#ffb4ad]" role="alert">
           {message.error}
         </div>
       )}
       {message.success && (
-        <div className="border border-[#00ff88]/35 bg-[#00ff88]/10 px-3 py-2 font-mono text-xs text-[#00ff88]" role="status">
+        <div className="flex-shrink-0 border border-[#00ff88]/35 bg-[#00ff88]/10 px-3 py-2 font-mono text-xs text-[#00ff88]" role="status">
           {message.success}
         </div>
       )}
 
-      <section className="border border-cyan-400/20 bg-[#090d16]/80">
-        <div className="border-b border-cyan-400/10 px-4 py-3 font-mono text-xs text-cyan-400">Writeups Index</div>
-        <div className="p-4">
-          <WriteupsList
-            disabled={readOnly}
-            writeups={writeups}
-            onArchive={handleArchive}
-            onEdit={(writeup) => {
-              if (!confirmDiscard()) {
-                return;
-              }
-
-              openEditor(cloneWriteup(writeup));
-            }}
-            onMove={handleMove}
-            onRestore={handleRestore}
-            pending={pending}
-            selectedWriteupId={editingWriteup?.id ?? null}
-          />
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        {editingWriteup ? (
-          <WriteupForm
-            disabled={readOnly}
-            writeup={editingWriteup}
-            mode={editingWriteup.id ? 'edit' : 'create'}
-            onCancel={() => {
-              if (!confirmDiscard()) {
-                return;
-              }
-
-              setFormMessage({});
-              setUploadMessage({});
-              setExtractedDraft(null);
-              setEditingWriteup(null);
-              setOriginalWriteup(null);
-            }}
-            onChange={setEditingWriteup}
-            onSave={handleSave}
-            pending={pending}
-            projects={projects}
-            onUploadFile={(file) => void handleUploadFile(file)}
-            onRemoveFile={() => void handleRemoveFile()}
-            extractedDraft={extractedDraft}
-            uploadMessage={uploadMessage}
-            onApplyExtracted={handleApplyExtracted}
-            onDismissExtracted={() => setExtractedDraft(null)}
-            message={formMessage}
-          />
-        ) : (
-          <div className="border border-dashed border-cyan-400/20 bg-black/20 p-6 font-mono text-xs text-gray-500">
-            Select a writeup to edit or create a new lab writeup.
+      <div className="flex flex-1 min-h-0 gap-4">
+        <div className="hidden min-h-0 flex-col border border-cyan-400/20 bg-[#090d16]/80 lg:flex lg:w-1/3 lg:max-w-sm lg:flex-shrink-0">
+          <div className="flex-shrink-0 border-b border-cyan-400/10 px-4 py-3 font-mono text-xs text-cyan-400">
+            Writeups Index ({writeups.length})
           </div>
-        )}
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            <WriteupsList {...listProps} />
+          </div>
+        </div>
 
-        <WriteupPreviewCard writeup={editingWriteup} />
-      </section>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col border border-cyan-400/20 bg-[#090d16]/80">
+          <div className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border-b border-cyan-400/10 px-4 py-3">
+            <span className="font-mono text-xs text-cyan-400">
+              {editingWriteup ? (editingWriteup.id ? 'Edit Writeup' : 'Create New Writeup') : 'writeups.detail'}
+            </span>
+            {editingWriteup && (
+              <div className="flex border border-cyan-400/20 p-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('edit')}
+                  className={`px-3 py-1 font-mono text-xs transition-colors ${
+                    activeTab === 'edit' ? 'bg-cyan-400/15 text-cyan-300' : 'text-gray-500 hover:text-cyan-300'
+                  }`}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('preview')}
+                  className={`px-3 py-1 font-mono text-xs transition-colors ${
+                    activeTab === 'preview' ? 'bg-cyan-400/15 text-cyan-300' : 'text-gray-500 hover:text-cyan-300'
+                  }`}
+                >
+                  Preview
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {editingWriteup ? (
+              activeTab === 'edit' ? (
+                <WriteupForm
+                  disabled={readOnly}
+                  writeup={editingWriteup}
+                  mode={editingWriteup.id ? 'edit' : 'create'}
+                  onCancel={() => {
+                    if (!confirmDiscard()) {
+                      return;
+                    }
+
+                    setFormMessage({});
+                    setUploadMessage({});
+                    setExtractedDraft(null);
+                    setEditingWriteup(null);
+                    setOriginalWriteup(null);
+                  }}
+                  onChange={setEditingWriteup}
+                  onSave={handleSave}
+                  pending={pending}
+                  projects={projects}
+                  onUploadFile={(file) => void handleUploadFile(file)}
+                  onRemoveFile={() => void handleRemoveFile()}
+                  extractedDraft={extractedDraft}
+                  uploadMessage={uploadMessage}
+                  onApplyExtracted={handleApplyExtracted}
+                  onDismissExtracted={() => setExtractedDraft(null)}
+                  message={formMessage}
+                />
+              ) : (
+                <WriteupPreviewCard writeup={editingWriteup} />
+              )
+            ) : (
+              <div className="flex h-full items-center justify-center p-6 text-center font-mono text-xs text-gray-500">
+                Select a writeup to edit or create a new lab writeup.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setDrawerOpen(false)} aria-hidden="true" />
+          <div className="relative z-10 flex h-full w-[85vw] max-w-sm flex-col border-r border-cyan-400/20 bg-[#090d16] shadow-[0_0_30px_rgba(0,0,0,0.6)]">
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-cyan-400/10 px-4 py-3">
+              <span className="font-mono text-xs text-cyan-400">Writeups Index ({writeups.length})</span>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Close writeups list"
+                className="border border-gray-600/45 bg-gray-600/10 p-1.5 text-gray-400 hover:bg-gray-600/18"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              <WriteupsList {...listProps} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
