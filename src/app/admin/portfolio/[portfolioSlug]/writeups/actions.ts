@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createAdminSupabaseClient, getAdminSessionTokens } from '@/lib/auth/admin-session';
+import { ADMIN_SESSION_EXPIRED_ERROR } from '@/lib/auth/constants';
 import { requirePortfolioManager } from '@/lib/auth/portfolio-access';
 import { extractWriteupContent, type EmbeddedWriteupImage } from '@/lib/writeups/extract-content';
 import type { WriteupFileUploadResult, WriteupMutationResult, WriteupPayload } from '@/components/admin/writeups/types';
@@ -454,7 +455,7 @@ async function getMutationContext(portfolioSlug: string) {
   const tokens = await getAdminSessionTokens();
 
   if (!tokens) {
-    throw new Error('Session expired. Sign in again.');
+    throw new Error(ADMIN_SESSION_EXPIRED_ERROR);
   }
 
   const access = await requirePortfolioManager(portfolioSlug);

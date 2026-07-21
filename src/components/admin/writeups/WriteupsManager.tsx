@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { List, Plus, Save, X } from 'lucide-react';
 import type { Portfolio, PortfolioRole } from '@/types/portfolio';
+import { ADMIN_SESSION_EXPIRED_ERROR } from '@/lib/auth/constants';
+import { useSessionExpired } from '@/components/admin/session/SessionExpiredProvider';
 import { WriteupForm, type ExtractedDraft } from './WriteupForm';
 import { WriteupsList } from './WriteupsList';
 import { WriteupPreviewCard } from './WriteupPreviewCard';
@@ -159,6 +161,7 @@ export function WriteupsManager({
   projects,
 }: WriteupsManagerProps) {
   const router = useRouter();
+  const { notifySessionExpired } = useSessionExpired();
   const manager = canSave(role);
   const [writeups, setWriteups] = useState(() => sortedWriteups(initialWriteups));
   const [editingWriteup, setEditingWriteup] = useState<WriteupEditorValue | null>(null);
@@ -207,6 +210,11 @@ export function WriteupsManager({
     closeEditor = false,
   ) => {
     setter(result);
+
+    if (result.error === ADMIN_SESSION_EXPIRED_ERROR) {
+      notifySessionExpired();
+      return;
+    }
 
     if (result.success) {
       if (closeEditor) {

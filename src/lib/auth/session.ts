@@ -58,6 +58,35 @@ export async function getAdminSessionTokens() {
   return { accessToken, refreshToken };
 }
 
+function decodeJwtExpiryMs(token: string): number | null {
+  try {
+    const payload = token.split('.')[1];
+
+    if (!payload) {
+      return null;
+    }
+
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const { exp } = JSON.parse(Buffer.from(padded, 'base64').toString('utf8')) as { exp?: number };
+
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Epoch ms when the current admin access token expires, or null when there is no session. */
+export async function getAdminSessionExpiresAt(): Promise<number | null> {
+  const tokens = await getAdminSessionTokens();
+
+  if (!tokens) {
+    return null;
+  }
+
+  return decodeJwtExpiryMs(tokens.accessToken);
+}
+
 export async function setAdminSessionCookies(session: { access_token: string; refresh_token: string; expires_in?: number }) {
   const cookieStore = await cookies();
 
