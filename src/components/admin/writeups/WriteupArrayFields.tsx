@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { Plus, X } from 'lucide-react';
 import type { EditableListItem } from './types';
 
@@ -17,12 +18,42 @@ function createItem(value: string): EditableListItem {
 }
 
 export function WriteupArrayFields({ disabled, items, label, placeholder, onChange }: WriteupArrayFieldsProps) {
+  const inputRefs = useRef(new Map<string, HTMLInputElement>());
+  const [pendingFocusId, setPendingFocusId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pendingFocusId) {
+      return;
+    }
+
+    const input = inputRefs.current.get(pendingFocusId);
+
+    if (input) {
+      input.focus();
+      setPendingFocusId(null);
+    }
+  }, [items, pendingFocusId]);
+
   const handleAdd = () => {
     if (disabled) {
       return;
     }
 
-    onChange([...items, createItem('')]);
+    const newItem = createItem('');
+    onChange([...items, newItem]);
+    setPendingFocusId(newItem.id);
+  };
+
+  const handleAddAfter = (index: number) => {
+    if (disabled) {
+      return;
+    }
+
+    const newItem = createItem('');
+    const next = [...items];
+    next.splice(index + 1, 0, newItem);
+    onChange(next);
+    setPendingFocusId(newItem.id);
   };
 
   const handleRemove = (itemId: string) => {
@@ -39,6 +70,13 @@ export function WriteupArrayFields({ disabled, items, label, placeholder, onChan
     }
 
     onChange(items.map((item) => (item.id === itemId ? { ...item, value } : item)));
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleAddAfter(index);
+    }
   };
 
   return (
@@ -62,13 +100,21 @@ export function WriteupArrayFields({ disabled, items, label, placeholder, onChan
             No items added yet
           </div>
         )}
-        {items.map((item) => (
+        {items.map((item, index) => (
           <div key={item.id} className="flex gap-2">
             <input
+              ref={(el) => {
+                if (el) {
+                  inputRefs.current.set(item.id, el);
+                } else {
+                  inputRefs.current.delete(item.id);
+                }
+              }}
               type="text"
               disabled={disabled}
               value={item.value}
               onChange={(e) => handleChange(item.id, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               placeholder={placeholder}
               className="min-w-0 flex-1 border border-cyan-400/20 bg-[#050812]/90 px-3 py-2 font-mono text-xs text-gray-200 placeholder-gray-600 shadow-[inset_0_1px_4px_rgba(0,0,0,0.3)] focus:border-cyan-400/50 focus:outline-none focus:ring-1 focus:ring-cyan-400/30 disabled:cursor-not-allowed disabled:opacity-50"
             />
