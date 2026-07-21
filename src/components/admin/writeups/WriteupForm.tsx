@@ -36,14 +36,6 @@ const inputClasses =
 const labelClasses = 'mb-2 block font-mono text-xs text-cyan-400';
 const hintClasses = 'mt-1 font-mono text-[10px] text-gray-600';
 
-function generateSlugFromTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .substring(0, 180);
-}
-
 function Section({
   title,
   badge,
@@ -100,12 +92,7 @@ export function WriteupForm({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleTitleChange = (title: string) => {
-    onChange({
-      ...writeup,
-      title,
-      // Auto-generate slug from title if in create mode and slug is empty
-      slug: mode === 'create' && !writeup.slug ? generateSlugFromTitle(title) : writeup.slug,
-    });
+    onChange({ ...writeup, title });
   };
 
   const handleVisibilityChange = (visibility: 'public' | 'restricted' | 'private') => {
@@ -165,7 +152,7 @@ export function WriteupForm({
 
   const hasFile = Boolean(writeup.storagePath);
   const isUnsafePublicActive = writeup.machineStatus === 'active' && writeup.visibility === 'public';
-  const canSubmit = Boolean(writeup.title.trim()) && Boolean(writeup.slug.trim()) && !isUnsafePublicActive;
+  const canSubmit = Boolean(writeup.title.trim()) && !isUnsafePublicActive;
 
   return (
     <div className="space-y-4 p-4">
@@ -186,43 +173,24 @@ export function WriteupForm({
             />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="writeup-slug" className={labelClasses}>
-                Slug <span className="text-[#ff5f56]">*</span>
-              </label>
-              <input
-                id="writeup-slug"
-                type="text"
-                disabled={disabled}
-                value={writeup.slug}
-                onChange={(e) => onChange({ ...writeup, slug: e.target.value.toLowerCase() })}
-                placeholder="htb-obscurity"
-                maxLength={180}
-                className={inputClasses}
-              />
-              <p className={hintClasses}>Lowercase letters, numbers, and hyphens only</p>
-            </div>
-
-            <div>
-              <label htmlFor="writeup-project" className={labelClasses}>
-                Linked Project (Optional)
-              </label>
-              <select
-                id="writeup-project"
-                disabled={disabled}
-                value={writeup.projectId || ''}
-                onChange={(e) => onChange({ ...writeup, projectId: e.target.value || null })}
-                className={inputClasses}
-              >
-                <option value="">-- None --</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div>
+            <label htmlFor="writeup-project" className={labelClasses}>
+              Linked Project (Optional)
+            </label>
+            <select
+              id="writeup-project"
+              disabled={disabled}
+              value={writeup.projectId || ''}
+              onChange={(e) => onChange({ ...writeup, projectId: e.target.value || null })}
+              className={inputClasses}
+            >
+              <option value="">-- None --</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.title}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -739,7 +707,7 @@ export function WriteupForm({
             <p className="font-mono text-[10px] leading-relaxed text-[#ffbd2e]">
               {isUnsafePublicActive
                 ? 'Resolve the active/public conflict above before saving.'
-                : 'Title and slug are required before saving.'}
+                : 'Title is required before saving.'}
             </p>
           )}
 

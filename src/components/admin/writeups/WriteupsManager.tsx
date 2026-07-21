@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { List, Plus, X } from 'lucide-react';
+import { List, Plus, Save, X } from 'lucide-react';
 import type { Portfolio, PortfolioRole } from '@/types/portfolio';
 import { WriteupForm, type ExtractedDraft } from './WriteupForm';
 import { WriteupsList } from './WriteupsList';
 import { WriteupPreviewCard } from './WriteupPreviewCard';
+import { generateSlugFromTitle } from './slug';
 import type {
   EditableListItem,
   GithubExploitEditorItem,
@@ -194,6 +195,11 @@ export function WriteupsManager({
   const isDirty = Boolean(
     editingWriteup && originalWriteup && JSON.stringify(editingWriteup) !== JSON.stringify(originalWriteup),
   );
+  const isUnsafePublicActive =
+    editingWriteup?.machineStatus === 'active' && editingWriteup?.visibility === 'public';
+  const canSaveEditingWriteup = Boolean(
+    editingWriteup && !readOnly && !pending && editingWriteup.title.trim() && !isUnsafePublicActive,
+  );
 
   const finishMutation = (
     result: WriteupMutationResult,
@@ -372,7 +378,13 @@ export function WriteupsManager({
       return;
     }
 
-    const payload = writeupToPayload(editingWriteup);
+    const titleChanged = editingWriteup.title.trim() !== (originalWriteup?.title.trim() ?? '');
+    const slug =
+      titleChanged || !editingWriteup.slug.trim()
+        ? generateSlugFromTitle(editingWriteup.title)
+        : editingWriteup.slug;
+
+    const payload = writeupToPayload({ ...editingWriteup, slug });
 
     void runMutation(
       () => (editingWriteup.id ? updateWriteup(editingWriteup.id, payload) : createWriteup(payload)),
@@ -435,39 +447,40 @@ export function WriteupsManager({
 
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col gap-4">
-      <header className="flex-shrink-0 border border-[#00ff88]/25 bg-[#090d16]/80 p-5 shadow-[0_0_30px_rgba(0,255,136,0.07)] md:p-6">
-        <div className="mb-3 flex flex-wrap items-center gap-2 font-mono text-xs">
+      <header className="flex flex-shrink-0 flex-wrap items-center justify-between gap-3 border border-[#00ff88]/25 bg-[#090d16]/80 px-5 py-3 shadow-[0_0_20px_rgba(0,255,136,0.06)] md:px-6">
+        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
           <span className="text-cyan-400">writeups.manager</span>
           <span className="border border-[#00ff88]/25 px-2 py-1 text-[#00ff88]">{portfolio.title}</span>
           <span className="border border-cyan-400/25 px-2 py-1 text-cyan-300">{role}</span>
           {readOnly && <span className="border border-[#ffbd2e]/35 px-2 py-1 text-[#ffbd2e]">Read-only access</span>}
         </div>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="mb-3 text-3xl font-bold leading-tight text-white md:text-4xl">Writeups Manager</h1>
-            <p className="max-w-3xl text-sm leading-relaxed text-gray-400 md:text-base">
-              Manage lab writeups, visibility, restricted files, and safe public summaries.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="inline-flex items-center gap-2 border border-cyan-400/45 bg-cyan-400/10 px-4 py-2.5 font-mono text-sm text-cyan-300 transition-all hover:bg-cyan-400/18 lg:hidden"
-            >
-              <List className="h-4 w-4" aria-hidden="true" />
-              Writeups ({writeups.length})
-            </button>
-            <button
-              type="button"
-              disabled={readOnly || pending}
-              onClick={handleNewWriteup}
-              className="inline-flex items-center gap-2 border border-[#00ff88]/45 bg-[#00ff88]/10 px-4 py-2.5 font-mono text-sm text-[#00ff88] shadow-[0_0_16px_rgba(0,255,136,0.12)] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-600"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              New Writeup
-            </button>
-          </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="inline-flex items-center gap-2 border border-cyan-400/45 bg-cyan-400/10 px-3 py-2 font-mono text-xs text-cyan-300 transition-all hover:bg-cyan-400/18 lg:hidden"
+          >
+            <List className="h-4 w-4" aria-hidden="true" />
+            Writeups ({writeups.length})
+          </button>
+          <button
+            type="button"
+            disabled={!canSaveEditingWriteup}
+            onClick={handleSave}
+            className="inline-flex items-center gap-2 border border-cyan-400/45 bg-cyan-400/10 px-3 py-2 font-mono text-xs text-cyan-300 transition-all hover:bg-cyan-400/18 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-600"
+          >
+            <Save className="h-4 w-4" aria-hidden="true" />
+            {pending && editingWriteup ? 'Saving...' : 'Save Writeup'}
+          </button>
+          <button
+            type="button"
+            disabled={readOnly || pending}
+            onClick={handleNewWriteup}
+            className="inline-flex items-center gap-2 border border-[#00ff88]/45 bg-[#00ff88]/10 px-3 py-2 font-mono text-xs text-[#00ff88] shadow-[0_0_16px_rgba(0,255,136,0.12)] transition-all hover:bg-[#00ff88]/18 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-600 disabled:shadow-none"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New Writeup
+          </button>
         </div>
       </header>
 
