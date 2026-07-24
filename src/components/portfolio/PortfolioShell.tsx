@@ -1,7 +1,8 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import type { PortfolioData, QuickCommand, SectionId } from '@/types/portfolio';
 import { AboutSection } from '@/components/sections/AboutSection';
 import { CapabilitiesSection } from '@/components/sections/CapabilitiesSection';
@@ -14,9 +15,14 @@ import { SkillsSection } from '@/components/sections/SkillsSection';
 import { WriteupsSection } from '@/components/sections/WriteupsSection';
 import { MainPanel } from './MainPanel';
 import { MobileNavigation } from './MobileNavigation';
+import type { RetroCRTSceneHandle } from './RetroCRTScene';
 import { Sidebar } from './Sidebar';
 import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
+
+const RetroCRTScene = dynamic(() => import('./RetroCRTScene').then((mod) => mod.RetroCRTScene), {
+  ssr: false,
+});
 
 type PortfolioShellProps = {
   portfolioData: PortfolioData;
@@ -46,6 +52,7 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
   const [transitioning, setTransitioning] = useState(false);
   const [loadingModule, setLoadingModule] = useState(false);
   const [consoleOutput, setConsoleOutput] = useState(site.initialConsoleOutput);
+  const sceneRef = useRef<RetroCRTSceneHandle>(null);
 
   const activeConfig = sections.find((section) => section.id === activeSection) ?? sections[0];
   const animationDuration = `${Math.max(8, 60 - theme.animationIntensity * 0.45)}s`;
@@ -86,6 +93,8 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
     }
 
     window.history.replaceState(null, '', `#${section}`);
+
+    sceneRef.current?.trigger();
 
     const nextModule = sections.find((item) => item.id === section)?.module ?? section;
     setTransitioning(true);
@@ -191,68 +200,72 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
       className="h-screen flex flex-col bg-[#050812] text-gray-200 overflow-hidden relative selection:bg-[#00ff88]/20 selection:text-[#eafff5]"
       style={themeStyle}
     >
-      {theme.scanlinesEnabled && (
-        <div
-          className="absolute inset-0 pointer-events-none z-50 animate-scanline"
-          style={{
-            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${theme.primary} 2px, ${theme.primary} 4px)`,
-            opacity: Math.max(0.01, theme.glowIntensity / 2000),
-            animationDuration,
-          }}
-        />
-      )}
+      <RetroCRTScene ref={sceneRef} />
 
-      <div
-        className="absolute inset-0 pointer-events-none animate-grid-move"
-        style={{
-          backgroundImage: `linear-gradient(${theme.primary} 1px, transparent 1px), linear-gradient(90deg, ${theme.secondary} 1px, transparent 1px)`,
-          backgroundSize: '56px 56px',
-          opacity: Math.max(0, theme.glowIntensity / 2500),
-          animationDuration,
-        }}
-      />
-
-      <TopBar
-        activeModule={activeConfig.module}
-        booted={booted}
-        mobileMenuOpen={mobileMenuOpen}
-        site={site}
-        onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          activeSection={activeSection}
-          booted={booted}
-          quickCommands={portfolioData.navigation.quickCommands}
-          sections={sections}
-          site={site}
-          onQuickCommand={runQuickCommand}
-          onSectionChange={handleSectionChange}
-        />
-
-        {mobileMenuOpen && (
-          <MobileNavigation
-            activeSection={activeSection}
-            quickCommands={portfolioData.navigation.quickCommands}
-            sections={sections}
-            onQuickCommand={runQuickCommand}
-            onSectionChange={handleMobileSectionChange}
+      <div className="relative z-10 flex flex-col h-full">
+        {theme.scanlinesEnabled && (
+          <div
+            className="absolute inset-0 pointer-events-none z-50 animate-scanline"
+            style={{
+              backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${theme.primary} 2px, ${theme.primary} 4px)`,
+              opacity: Math.max(0.01, theme.glowIntensity / 2000),
+              animationDuration,
+            }}
           />
         )}
 
-        <MainPanel
-          activeConfig={activeConfig}
-          booted={booted}
-          loadingModule={loadingModule}
-          site={site}
-          transitioning={transitioning}
-        >
-          {renderSection()}
-        </MainPanel>
-      </div>
+        <div
+          className="absolute inset-0 pointer-events-none animate-grid-move"
+          style={{
+            backgroundImage: `linear-gradient(${theme.primary} 1px, transparent 1px), linear-gradient(90deg, ${theme.secondary} 1px, transparent 1px)`,
+            backgroundSize: '56px 56px',
+            opacity: Math.max(0, theme.glowIntensity / 2500),
+            animationDuration,
+          }}
+        />
 
-      <StatusBar booted={booted} consoleOutput={consoleOutput} site={site} onSubmitCommand={handleConsoleCommand} />
+        <TopBar
+          activeModule={activeConfig.module}
+          booted={booted}
+          mobileMenuOpen={mobileMenuOpen}
+          site={site}
+          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+        />
+
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar
+            activeSection={activeSection}
+            booted={booted}
+            quickCommands={portfolioData.navigation.quickCommands}
+            sections={sections}
+            site={site}
+            onQuickCommand={runQuickCommand}
+            onSectionChange={handleSectionChange}
+          />
+
+          {mobileMenuOpen && (
+            <MobileNavigation
+              activeSection={activeSection}
+              quickCommands={portfolioData.navigation.quickCommands}
+              sections={sections}
+              onQuickCommand={runQuickCommand}
+              onSectionChange={handleMobileSectionChange}
+            />
+          )}
+
+          <MainPanel
+            activeConfig={activeConfig}
+            booted={booted}
+            loadingModule={loadingModule}
+            site={site}
+            transitioning={transitioning}
+          >
+            {renderSection()}
+          </MainPanel>
+        </div>
+
+        <StatusBar booted={booted} consoleOutput={consoleOutput} site={site} onSubmitCommand={handleConsoleCommand} />
+      </div>
     </div>
   );
 }
