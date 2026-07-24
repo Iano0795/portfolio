@@ -197,7 +197,7 @@ export function PortfolioShell({ portfolioData }: PortfolioShellProps) {
 
   return (
     <div
-      className="h-screen flex flex-col bg-[#050812] text-gray-200 overflow-hidden relative selection:bg-[#00ff88]/20 selection:text-[#eafff5]"
+      className="retro-scrollbars h-screen flex flex-col bg-[#050812] text-gray-200 overflow-hidden relative selection:bg-[#00ff88]/20 selection:text-[#eafff5]"
       style={themeStyle}
     >
       <RetroCRTScene ref={sceneRef} />
