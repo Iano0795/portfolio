@@ -169,12 +169,13 @@ export const RetroCRTScene = forwardRef<RetroCRTSceneHandle>(function RetroCRTSc
     postScene.add(postPlane);
 
     // --- Animation loop --------------------------------------------------
-    const clock = new THREE.Clock();
+    const timer = new THREE.Timer();
     let frameId: number;
 
     function animate() {
       frameId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      timer.update();
+      const t = timer.getElapsed();
 
       camera.position.x = Math.sin(t * 0.15) * 6;
       camera.position.z = Math.cos(t * 0.15) * 6;
