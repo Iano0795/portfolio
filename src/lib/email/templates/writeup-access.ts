@@ -5,9 +5,10 @@
  * Templates use plain HTML; no external CSS framework is required.
  *
  * SECURITY:
- * - Never include raw tokens, storage paths, or private file URLs in templates.
- * - Access links (containing tokens) are only injected by sendApprovalEmail
- *   and only when WRITEUP_SEND_APPROVAL_LINKS=true.
+ * - The approval email intentionally includes the raw access token as plain
+ *   text (the requester pastes it into a form on the writeup page to unlock
+ *   it) — never log or persist this token anywhere else.
+ * - Never include storage paths or private file URLs in templates.
  */
 import "server-only";
 
@@ -170,6 +171,8 @@ export function buildRequestApprovedEmail(params: {
   expiresAtFormatted?: string | null;
   maxViews?: number | null;
   accessLink?: string | null;
+  /** Raw access token — shown as plain text for the requester to paste into the unlock form. */
+  accessToken?: string | null;
 }): EmailTemplate {
   const subject = "Your writeup access request was approved";
 
@@ -191,12 +194,18 @@ export function buildRequestApprovedEmail(params: {
     ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:20px;margin-bottom:24px;">
          <p style="margin:0 0 12px;color:#15803d;font-size:14px;font-weight:600;">Your Access Link</p>
          <p style="margin:0 0 16px;color:#374151;font-size:13px;">
-           Click the button below to access the writeup. This link is personal — please do not share it.
+           Open the writeup below, then enter your access token when prompted to unlock it. This token is personal — please do not share it.
          </p>
          <a href="${params.accessLink}"
             style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;padding:10px 22px;border-radius:6px;font-weight:600;font-size:14px;">
-           Access Writeup
+           Open Writeup
          </a>
+         ${
+           params.accessToken
+             ? `<p style="margin:20px 0 6px;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Access Token</p>
+                <p style="margin:0;padding:10px 12px;background:#ffffff;border:1px solid #bbf7d0;border-radius:4px;color:#166534;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all;">${params.accessToken}</p>`
+             : ""
+         }
        </div>`
     : `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:16px;margin-bottom:24px;">
          <p style="margin:0;color:#92400e;font-size:13px;">
@@ -227,8 +236,11 @@ export function buildRequestApprovedEmail(params: {
   if (params.maxViews) textLines.push(`Max views: ${params.maxViews}`);
   if (params.expiresAtFormatted || params.maxViews) textLines.push("");
   if (params.accessLink) {
-    textLines.push(`Access your writeup: ${params.accessLink}`);
-    textLines.push("This link is personal — please do not share it.");
+    textLines.push(`Open the writeup: ${params.accessLink}`);
+    if (params.accessToken) {
+      textLines.push(`Access token: ${params.accessToken}`);
+      textLines.push("Enter this token on the page to unlock the writeup. It is personal — please do not share it.");
+    }
   } else {
     textLines.push(
       "Your access will be delivered to you shortly. Violet will reach out with further details."

@@ -53,6 +53,7 @@ export type FlatRevokeResult = {
 
 type AccessRequestsManagerProps = {
   initialRequests: AccessRequestWithDetails[];
+  initialSelectedRequestId?: string;
   portfolio: Portfolio;
   role: PortfolioRole;
   onApprove: (requestId: string, data: any) => Promise<ApproveServerResult>;
@@ -62,6 +63,7 @@ type AccessRequestsManagerProps = {
 
 export function AccessRequestsManager({
   initialRequests,
+  initialSelectedRequestId,
   portfolio,
   role,
   onApprove,
@@ -69,7 +71,9 @@ export function AccessRequestsManager({
   onRevoke,
 }: AccessRequestsManagerProps) {
   const [selectedRequest, setSelectedRequest] =
-    useState<AccessRequestWithDetails | null>(null);
+    useState<AccessRequestWithDetails | null>(
+      () => initialRequests.find((r) => r.id === initialSelectedRequestId) ?? null,
+    );
 
   // Flatten server action results into the shape the child forms expect
   const handleApprove = async (data: any): Promise<FlatApproveResult> => {

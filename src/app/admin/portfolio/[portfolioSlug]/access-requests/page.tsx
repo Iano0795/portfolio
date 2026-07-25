@@ -15,10 +15,14 @@ type AccessRequestsPageProps = {
   params: Promise<{
     portfolioSlug: string;
   }>;
+  searchParams: Promise<{
+    request?: string;
+  }>;
 };
 
-export default async function AccessRequestsPage({ params }: AccessRequestsPageProps) {
+export default async function AccessRequestsPage({ params, searchParams }: AccessRequestsPageProps) {
   const { portfolioSlug } = await params;
+  const { request: initialSelectedRequestId } = await searchParams;
 
   try {
     const access = await requirePortfolioAccess(portfolioSlug);
@@ -33,6 +37,7 @@ export default async function AccessRequestsPage({ params }: AccessRequestsPageP
       >
         <AccessRequestsManager
           initialRequests={requests}
+          initialSelectedRequestId={initialSelectedRequestId}
           portfolio={access.portfolio}
           role={access.member.role}
           onApprove={approveAccessRequest.bind(null, portfolioSlug)}

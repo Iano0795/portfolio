@@ -45,10 +45,12 @@ export type RevokeEmailResult = {
  * Approve a pending access request and create a grant.
  *
  * EMAIL BEHAVIOUR:
- * - Sends approval email to requester only if WRITEUP_SEND_APPROVAL_LINKS=true.
- * - If disabled (default until Task 31), returns status=skipped with a warning.
+ * - Sends an approval email to the requester with a link to the writeup's
+ *   public page and the raw access token as plain text, provided this
+ *   portfolio has a public URL configured (portfolios.public_url). Otherwise
+ *   the email still sends, minus the link/token — the admin UI warns.
  * - Email failure never blocks the approval — the grant is always created first.
- * - Raw token is used only to construct the access link; it is never stored or logged.
+ * - The raw token is used only to build the email content; it is never stored or logged.
  */
 export async function approveAccessRequest(
   portfolioSlug: string,
@@ -118,6 +120,7 @@ export async function approveAccessRequest(
         lab_writeups!inner(
           id,
           title,
+          slug,
           visibility,
           machine_status,
           is_requestable,
@@ -266,6 +269,8 @@ export async function approveAccessRequest(
       requesterEmail: request.requester_email,
       requesterName: request.requester_name,
       writeupTitle: writeup.title,
+      writeupSlug: writeup.slug,
+      portfolioPublicUrl: access.portfolio.publicUrl,
       expiresAt,
       maxViews,
       rawToken, // consumed here, not forwarded to logs
@@ -309,14 +314,12 @@ export async function approveAccessRequest(
     let approvalEmailWarning: string | undefined;
     if (emailResult.status === "skipped") {
       const reason = (emailResult as { reason?: string }).reason ?? "";
-      if (reason.includes("WRITEUP_SEND_APPROVAL_LINKS")) {
-        approvalEmailWarning =
-          "Approval email was not sent because secure access link delivery is disabled until the access page (Task 31) is deployed. Share the token with the requester manually.";
-      } else {
-        approvalEmailWarning = `Approval email skipped: ${reason}`;
-      }
+      approvalEmailWarning = `Approval email skipped: ${reason}. Share the token with the requester manually.`;
     } else if (emailResult.status === "failed") {
       approvalEmailWarning = `Approval email failed to send: ${(emailResult as { error?: string }).error ?? "unknown error"}`;
+    } else if (!access.portfolio.publicUrl) {
+      approvalEmailWarning =
+        "Approval email sent, but no writeup link was included because this portfolio has no public URL configured (Settings → Public URL).";
     }
 
     revalidatePath(`/admin/portfolio/${portfolioSlug}/access-requests`);
